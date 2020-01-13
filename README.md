@@ -1,5 +1,17 @@
 # PSD2UGUI工具使用说明
 1、运行环境：Unity2018.4.14f1、Photoshop CC 2015（需要调试的小伙伴可以装个Adobe ExtendScript Toolkit CC）
+2、支持说明：<br/>
+　·导出类型支持：文本、精灵、大图、按钮、面板、窗口<br/>
+　·其他支持：支持九宫格、支持相同图片只会导出一张<br/>
+3、操作步骤：<br/>
+　1、选择js脚本<br/>
+　　·第一种：PS中选择菜单：文件->脚本->浏览，选择psd2ugui.js脚本即可<br/>
+　　·第二种：将psd2ugui.js脚本放置到Photoshop的脚本目录<br/>
+　　　例如：D:\Program Files\Adobe\Adobe Photoshop CC 2015\Presets\Scripts<br/>
+　　　然后PS中选择菜单：文件->脚本->psd2ugui即可<br/>
+　2、在弹出的导出选项窗口中配置参数，然后确定就会生成一个带有Config文件和一堆图片的文件夹（PsdConfig_xxx）<br/>
+　3、将该PsdConfig_xxx文件夹放置到Unity项目中，然后选择菜单：Window->PsdConfigWindow<br/>
+　　　将PsdConfig_xxx拖入到PsdConfigWindow中的指定位置，点击生成即可<br/>
 
 ## 支持两种操作方式
 1、（操作方式1）直接导出psd的所有图层，然后在Unity中命名并调整布局<br/>
@@ -65,13 +77,3 @@
 　　　·第一种命名:图层1@test_9s_10（left、top、right、bottom都为10）<br/>
 　　　·第二种命名:图层1@test_9s_10_0_10_0（left=10、top=0、right=10、bottom=0）<br/>
 n、未完待续...<br/>
-
-## 具体操作步骤
-1、选择js脚本<br/>
-　·第一种：PS中选择菜单：文件->脚本->浏览，选择psd2ugui.js脚本即可<br/>
-　·第二种：将psd2ugui.js脚本放置到Photoshop的脚本目录<br/>
-　　例如：D:\Program Files\Adobe\Adobe Photoshop CC 2015\Presets\Scripts<br/>
-　　然后PS中选择菜单：文件->脚本->psd2ugui即可<br/>
-2、在弹出的导出选项窗口中配置参数，然后确定就会生成一个带有Config文件和一堆图片的文件夹（PsdConfig_xxx）<br/>
-3、将该PsdConfig_xxx文件夹放置到Unity项目中，然后选择菜单：Window->PsdConfigWindow<br/>
-　　将PsdConfig_xxx拖入到PsdConfigWindow中的指定位置，点击生成即可<br/>
