@@ -1,5 +1,5 @@
 # PSD2UGUI工具使用说明
-1、运行环境：Unity2018.4.14f1、Photoshop CC 2015（需要调试的小伙伴可以装个Adobe ExtendScript Toolkit CC）
+1、运行环境：Unity2018.4.14f1、Photoshop CC 2015（需要调试的小伙伴可以装个Adobe ExtendScript Toolkit CC）<br/>
 2、支持说明：<br/>
 　·导出类型支持：文本、精灵、大图、按钮、面板、窗口<br/>
 　·其他支持：支持九宫格、支持相同图片只会导出一张<br/>
