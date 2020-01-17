@@ -26,6 +26,13 @@ namespace PSD2UGUI.Generator
             text.text = info.GetContentWithColor();
             text.fontSize = info.FontSize;
 
+            if (info.OutlineColor != Color.clear)
+            {
+                var outline = node.AddMissingComponent<Outline>();
+                outline.effectColor = info.OutlineColor;
+                outline.effectDistance = info.OutlineSize;
+            }
+
             var font = ResourceManager.GetFontByName(info.Font);
             if (font != null)
             {

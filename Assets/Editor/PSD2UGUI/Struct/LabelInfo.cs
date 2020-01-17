@@ -22,6 +22,8 @@ namespace PSD2UGUI.Struct
         public string Font { protected set; get; }
         public int FontSize { protected set; get; }
         public string Color { protected set; get; }
+        public Color OutlineColor { protected set; get; }
+        public Vector2 OutlineSize { protected set; get; }
         public Direction TextDirection { protected set; get; }
         public TextAnchor TextAnchor { protected set; get; }
 
@@ -31,6 +33,16 @@ namespace PSD2UGUI.Struct
             Font = Info["font"];
             FontSize = Info["fontSize"].AsInt;
             Color = Info["color"];
+            OutlineColor = UnityEngine.Color.clear;
+            OutlineSize = Info["outlineSize"].ReadVector2();
+
+            var outlineColorStr = Info["outlineColor"].Value;
+            if (!string.IsNullOrEmpty(outlineColorStr))
+            {
+                var outlineColor = UnityEngine.Color.clear;
+                ColorUtility.TryParseHtmlString("#" + outlineColorStr, out outlineColor);
+                OutlineColor = outlineColor;
+            }
 
             TextDirection = Direction.Horizontal;
             var direction = Info["direction"].Value;

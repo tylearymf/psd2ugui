@@ -1,22 +1,31 @@
 ﻿//software: https://helpx.adobe.com/download-install/kb/creative-cloud-apps-download.html
 //json: https://github.com/tylearymf/Json-js/blob/master/json2.js
-//api1: https://www.adobe.com/devnet/photoshop/scripting.html ☆☆☆☆☆
+//api1: https://www.adobe.com/devnet/photoshop/scripting.html ☆☆☆☆☆☆
 //api2: https://www.indesignjs.de/extendscriptAPI/indesign10/ ☆☆☆☆☆
 //api3: http://nullice.com/archives/1790 ☆☆☆☆
 //api4: http://jongware.mit.edu/Js/index_1.html ☆☆☆
+//api5: Adobe ExtendScript Toolkit CC --> Help --> Object Model Viewer ☆☆☆☆☆
+//api6: Photoshop_charID_stringID_List(https://gist.github.com/tylearymf/546e7f46069f2858fda7da148d9afc33) ☆☆☆☆☆
+//      ActionDescriptor(http://objjob.phrogz.net/pshop/object/323)
+//      ActionDescriptor(http://jongware.mit.edu/pscs5js_html/psjscs5/pc_ActionDescriptor.html)
 
+//#region 调试参数
 //0 (no debugging), 1 (break on runtime errors), or 2 (full debug mode).
 //如果要调试就设置为2，然后出现异常的时候，ps会自动打开Adobe ExtendScript Toolkit CC并挂起ps
 $.level = 2
 //是否打开所有提示
 var showDialog = false
+//#endregion 调试参数
 
+//#region 可修改的字段
 //游戏分辨率设置
 var gameScreenWidth = 1920
 var gameScreenHeight = 1080
-
 //导出图片方案
 var exportImagePlan = 1
+//#endregion 可修改的字段
+
+//#region 私有字段
 var config
 var gameScreenSize
 
@@ -33,18 +42,7 @@ var layerExportType
 var progressBar
 var progressIndex
 var progressTotalCount
-
-//弹普通提示
-function ShowMsg(msg) {
-    if (showDialog)
-        alert(msg)
-}
-
-//弹错误提示
-function ShowError(msg) {
-    alert(msg)
-    throw new Error(msg, "customException", 0)
-}
+//#endregion 私有字段
 
 //key:节点类型,value:简短类型标记
 ComponentType = {
@@ -63,6 +61,9 @@ ComponentType = {
     //九宫格
     Slice: "9s",
 }
+
+//执行转换
+Main()
 
 //入口
 function Main() {
@@ -160,6 +161,7 @@ function Main() {
     })
 }
 
+//#region ui 扩展
 //ui 扩展
 function AddGroup(win, text, callback) {
     var group = win.add("group")
@@ -181,7 +183,9 @@ function AddDropDownList(group, type, defaultValue, callback) {
         callback(drop)
     }
 }
+//#endregion ui 扩展
 
+//#region ps原生Layer类型转换成自定义Layer类型
 //开始导出
 function StartExport(doc) {
     //检查残留文件夹
@@ -302,12 +306,14 @@ function updateProgressBar() {
     progressBar.value = (progressIndex / progressTotalCount) * 100.0
     progressIndex = progressIndex + 1
 }
+//#endregion ps原生Layer类型转换成自定义Layer类型
 
-//初始化节点结构
+//#region 初始化节点结构
 function InitNodeStruct() {
     //根据节点类型名获取类型
     GetInfoByTypeName = function (baseLayer) {
         var nodeTypeName = baseLayer.nodeTypeName
+        activeDocument.activeLayer = baseLayer.source
         if (nodeTypeName == ComponentType.Label) {
             return new LabelInfo(baseLayer)
         }
@@ -458,6 +464,22 @@ function InitNodeStruct() {
         this.color = this.textItem.color.rgb.hexValue
         this.fontSize = this.textItem.size.value
         this.labelName = String.format("{0}_{1}_{2}", this.baseLayer.nodeName, this.baseLayer.nodeTypeName, config.getImageSuffixIndex())
+        this.outlineColor = ""
+        this.outlineSize = new Vector2()
+
+        //获取描边效果
+        var outlineDescriptor = GetOutlineDescriptor()
+        if (outlineDescriptor != null) {
+            ShowAllKeysByDescriptor(outlineDescriptor)
+            var outLineEnableState = GetValueByDescriptor(outlineDescriptor, "enab")
+            if (outLineEnableState) {
+                this.outlineColor = GetHexColorByDescriptor(outlineDescriptor)
+                //在PS里面描边的Size只有一个值，所以导出到Unity后，x、y都是一样的
+                var size = GetValueByDescriptor(outlineDescriptor, "Sz  ")
+                this.outlineSize.x = size
+                this.outlineSize.y = size
+            }
+        }
 
         this.alignment = "CENTER"
         this.direction = "HORIZONTAL"
@@ -488,6 +510,8 @@ function InitNodeStruct() {
             font: this.font,
             fontSize: this.fontSize,
             color: this.color,
+            outlineColor: this.outlineColor,
+            outlineSize: this.outlineSize,
             alignment: this.alignment,
             direction: this.direction
         }
@@ -538,8 +562,9 @@ function InitNodeStruct() {
         }
     }
 }
+//#endregion 初始化节点结构
 
-//初始化自定义结构
+//#region 初始化自定义结构
 function InitCustomStruct() {
     //常量值
     NameConst = {
@@ -655,7 +680,7 @@ function InitCustomStruct() {
                 this.pivot = new Vector2(1, 0)
                 break;
             default:
-                this.pivot = Vector2.zero()
+                this.pivot = new Vector2()
                 break;
         }
     }
@@ -940,6 +965,7 @@ function InitCustomStruct() {
         }
     }
 }
+//#endregion 初始化自定义结构
 
 //#region 初始化内置结构
 function InitBuiltInStuct() {
@@ -992,7 +1018,7 @@ function InitBuiltInStuct() {
         }
     }
 }
-//#endregion
+//#endregion 初始化内置结构
 
 //#region 初始化窗口
 function InitMyWindow() {
@@ -1478,7 +1504,149 @@ function CheckColorsIsSame(colors1, colors2) {
     return true
 }
 
-//#endregion
+//#endregion 识别图片是否一致性（从每张图片中取8*8个像素点，然后根据这些像素点判断rgb是否一致）
 
-//执行转换
-Main()
+//#region 弹提示
+//弹普通提示
+function ShowMsg(msg) {
+    if (showDialog)
+        alert(msg)
+}
+
+//弹警告提示
+function ShowWarn(msg) {
+    alert(msg)
+}
+
+//弹错误提示
+function ShowError(msg) {
+    alert(msg)
+    throw new Error(msg, "customException", 0)
+}
+//#endregion 弹提示
+
+//#region ActionDescriptor扩展
+function ShowAllKeysByDescriptor(msg, descriptor) {
+    if (descriptor == null) {
+        descriptor = msg
+    }
+
+    var str = ""
+    if (descriptor != null) {
+        var typeName = descriptor.typename
+        for (var i = 0; i < descriptor.count; i++) {
+            if (typeName == "ActionDescriptor") {
+                var id = descriptor.getKey(i)
+                str += String.format("{0}. ActionDescriptor ID:{1}, charID:{2}, stringID:{3}, type:{4}", i, id, typeIDToCharID(id), typeIDToStringID(id), descriptor.getType(id))
+            }
+            else if (typeName == "ActionReference") {
+                var id = descriptor.getReference(i).getIndex()
+                str += String.format("{0}. ActionReference ID:{1}", i, id)
+            }
+            else if (typeName == "ActionList") {
+                var id = descriptor.getType(i)
+                str += String.format("{0}. ActionList ID:{0}", i, id)
+            }
+
+            str += "\n\n"
+        }
+    }
+
+    ShowMsg(str)
+}
+
+//获取选中的图层的所有附加效果
+function GetEffectsByActiveLayer() {
+    var reference = new ActionReference()
+    reference.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"))
+    var layerDescriptor = executeActionGet(reference)
+    var layerEffects = GetValueByDescriptor(layerDescriptor, "Lefx")
+    ShowAllKeysByDescriptor(layerEffects)
+    return layerEffects
+}
+
+//获取选中的Layer的描边效果对象
+function GetOutlineDescriptor() {
+    var layerEffects = GetEffectsByActiveLayer()
+    var outlineDescriptor = GetValueByDescriptor(layerEffects, "FrFX")
+    return outlineDescriptor
+}
+
+//根据Descriptor的Key获取Value
+function GetValueByDescriptor(descriptor, key) {
+    if (descriptor == null || descriptor.typename != "ActionDescriptor") return null
+
+    var id = 0
+    if (key.length == 4) {
+        id = charIDToTypeID(key)
+    }
+    else {
+        id = stringIDToTypeID(key)
+    }
+
+    var typeName = descriptor.getType(id).toString()
+    switch (typeName) {
+        case "DescValueType.BOOLEANTYPE":
+            return descriptor.getBoolean(id)
+        case "DescValueType.CLASSTYPE":
+            return descriptor.getClass(id)
+        case "DescValueType.DOUBLETYPE":
+            return descriptor.getDouble(id)
+        case "DescValueType.ENUMERATEDTYPE":
+            return typeIDToCharID(descriptor.getEnumerationValue(id))
+        case "DescValueType.INTEGERTYPE":
+            return descriptor.getInteger(id)
+        case "DescValueType.LISTTYPE":
+            return descriptor.getList(id)
+        case "DescValueType.OBJECTTYPE":
+            return descriptor.getObjectValue(id)
+        case "DescValueType.REFERENCETYPE":
+            return descriptor.getReference(id)
+        case "DescValueType.STRINGTYPE":
+            return descriptor.getString(id)
+        case "DescValueType.UNITDOUBLE":
+            return descriptor.getUnitDoubleValue(id)
+        case "DescValueType.ALIASTYPE":
+            return descriptor.getPath(id)
+        case "DescValueType.RAWTYPE":
+            return descriptor.getData(id)
+        default:
+            return null
+    }
+}
+
+//获取16进制RGB值
+function GetHexColorByDescriptor(descriptor) {
+    var colorDescriptor = GetValueByDescriptor(descriptor, "Clr ")
+    var redValue = GetValueByDescriptor(colorDescriptor, "Rd  ")
+    var greenValue = GetValueByDescriptor(colorDescriptor, "Grn ")
+    var blueValue = GetValueByDescriptor(colorDescriptor, "Bl  ")
+    var opacityValue = GetValueByDescriptor(descriptor, "Opct") * 2.55
+    var hexColor = RGBToHex(redValue, greenValue, blueValue, opacityValue)
+
+    return hexColor
+}
+//#endregion ActionDescriptor扩展
+
+//#region RGB转Hex扩展
+function RGBToHex(r, g, b, a) {
+    toHex = function (rgb) {
+        var hex = Number(rgb).toString(16)
+        if (hex.length < 2) {
+            hex = "0" + hex
+        }
+        return hex
+    }
+
+    var red = toHex(r)
+    var green = toHex(g)
+    var blue = toHex(b)
+    var alpha = "FF"
+
+    if (a) {
+        alpha = toHex(a)
+    }
+
+    return red + green + blue + alpha
+}
+//#endregion RGB转Hex扩展
