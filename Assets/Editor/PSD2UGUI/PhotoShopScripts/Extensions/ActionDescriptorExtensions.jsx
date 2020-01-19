@@ -1,14 +1,14 @@
 ActionDescriptorExtensions = function () {
 }
 
-//#region ActionDescriptor扩展
 ActionDescriptorExtensions.ShowAllKeysByDescriptor = function (msg, descriptor) {
-    if (descriptor == null) {
+    if (!descriptor) {
         descriptor = msg
+        msg = ""
     }
 
     var str = ""
-    if (descriptor != null) {
+    if (descriptor) {
         var typeName = descriptor.typename
         for (var i = 0; i < descriptor.count; i++) {
             if (typeName == "ActionDescriptor") {
@@ -29,7 +29,7 @@ ActionDescriptorExtensions.ShowAllKeysByDescriptor = function (msg, descriptor) 
     }
 
     if (str != "") {
-        ShowMsg(str)
+        ShowMsg(msg + str)
     }
 }
 
@@ -110,4 +110,3 @@ ActionDescriptorExtensions.GetHexColorByDescriptor = function (descriptor) {
 
     return hexColor
 }
-//#endregion ActionDescriptor扩展

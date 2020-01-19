@@ -24,7 +24,7 @@ BaseLayer = function (doc, layer) {
         this.nodeArgs = nameSplits2
     }
 
-    switch (layerExportType) {
+    switch (config.layerExportType) {
         case LayerExportType.EnableLayer:
         case LayerExportType.AllLayer:
             if (this.nodeName == "") {
@@ -59,7 +59,7 @@ BaseLayer = function (doc, layer) {
     this.scale_y = gameScreenHeight / this.doc.height.value
 
     this.isValid = function () {
-        switch (layerExportType) {
+        switch (config.layerExportType) {
             case LayerExportType.EnableAndTag:
                 return this.nodeName != "" && this.visible
             case LayerExportType.EnableLayer:
@@ -83,6 +83,7 @@ BaseLayer = function (doc, layer) {
         //先把轴调转，让其跟unity坐标轴方向一致
         pos.y = pos.y * -1
 
+        var pivotType = config.pivotType
         switch (pivotType) {
             case PivotType.TopLeft:
                 pos.x = pos.x - psdSize.x / 2

@@ -2,12 +2,14 @@ Vector4 = function (x, y, z, w) {
     Vector3.call(this, x, y, z)
     this.w = w || 0
 }
+
 Vector4.prototype.toString = function () {
     return "(" + this.x + "," + this.y + "," + this.z + "," + this.w + ")"
 }
+
 Vector4.parse = function (array) {
     var val = new Vector4()
-    if (array != null) {
+    if (array) {
         var temp = new Array()
         for (var i = 0; i < array.length; i++) {
             var v = array[i];

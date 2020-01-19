@@ -1,21 +1,31 @@
 //配置结构
-Config = function (doc, info, layers, exportPath, pivotType, enableFit) {
+Config = function (doc, info, layers) {
     this.doc = doc
-    this.psdPath = info.path
-    //remove .psd
-    this.psdName = info.name.substring(0, info.name.length - 4)
-    this.psdSize = new Vector2(info.width.value, info.height.value)
     this.layers = layers
-    //导出路径
-    this.exportPath = exportPath
-    //锚点类型
-    this.pivotType = pivotType
-    //是否开启适配
-    this.enableFit = enableFit
+
     //一个递增值，用于设置导出图片的后缀，以防止图片重名
     this.imageSuffixIndex = 1
 
-    switch (pivotType) {
+    //是否开启适配
+    this.enableFit = info.enableFit
+    //相同图片是否只导出一张
+    this.onlyOneImage = info.onlyOneImage
+    //PSD名字 remove .psd
+    this.psdName = info.psdName.substring(0, info.psdName.length - 4)
+    //PSD路径
+    this.psdPath = info.psdPath
+    //导出路径
+    this.exportPath = info.exportPath
+    //锚点类型
+    this.pivotType = info.pivotType
+    //导出类型
+    this.layerExportType = info.layerExportType
+    //PSD尺寸大小
+    this.psdSize = info.psdSize
+    //游戏画面大小
+    this.gameScreenSize = info.gameScreenSize
+
+    switch (this.pivotType) {
         case PivotType.TopLeft:
             this.pivot = new Vector2(0, 1)
             break;
@@ -48,13 +58,16 @@ Config = function (doc, info, layers, exportPath, pivotType, enableFit) {
             break;
     }
 }
+
 Config.prototype.getPivotValue = function () {
     return this.pivot
 }
+
 Config.prototype.getImageSuffixIndex = function () {
     this.imageSuffixIndex += 1
     return this.imageSuffixIndex
 }
+
 Config.prototype.toJson = function () {
     return {
         name: this.psdName,

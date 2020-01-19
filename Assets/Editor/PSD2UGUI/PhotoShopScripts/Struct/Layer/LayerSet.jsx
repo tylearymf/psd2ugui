@@ -5,9 +5,11 @@ LayerSet = function (doc, layer) {
     this.sourceLayers = layer.layers
     this.layers = LayerExtensions.GetLayerInfos(doc, this.sourceLayers)
 }
+
 LayerSet.prototype.toString = function () {
     return Json.stringify(this)
 }
+
 LayerSet.prototype.toJson = function () {
     return {
         name: this.nodeName,
@@ -21,6 +23,7 @@ LayerSet.prototype.toJson = function () {
         layers: this.layers,
     }
 }
+
 LayerSet.prototype.export = function (folderFullName) {
     for (var i = this.layers.length - 1; i >= 0; i--) {
         var layer = this.layers[i]

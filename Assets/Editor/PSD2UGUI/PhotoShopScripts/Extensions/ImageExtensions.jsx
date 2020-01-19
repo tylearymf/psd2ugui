@@ -5,7 +5,7 @@ var imageHashArray = new Array()
 
 //别图片是否一致性（从每张图片中取8*8个像素点，然后根据这些像素点判断rgb是否一致）
 ImageExtensions.GetSameImageExportName = function (doc, baseInfo) {
-    if (onlyOneImage) {
+    if (config.onlyOneImage) {
         var size = baseInfo.baseLayer.getSize()
         var w = size.x
         var h = size.y

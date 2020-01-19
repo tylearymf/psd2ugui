@@ -5,6 +5,7 @@ FileConfig = function (config) {
     this.path = config.psdPath
     this.folder = config.psdName
 }
+
 FileConfig.prototype.getFolderPath = function () {
     var path = null
     if (this.config.exportPath == null) {
@@ -17,9 +18,11 @@ FileConfig.prototype.getFolderPath = function () {
     if (!folder.exists) folder.create()
     return path
 }
+
 FileConfig.prototype.getFullName = function () {
     return String.format("{0}/{1}", this.getFolderPath(), this.name)
 }
+
 FileConfig.prototype.save = function () {
     if (this.path == "" || !this.config) {
         ShowError("配置出错，不能保存")
@@ -35,6 +38,7 @@ FileConfig.prototype.save = function () {
     file.writeln(str)
     file.close()
 }
+
 FileConfig.prototype.showInExplorer = function () {
     var folder = new Folder(this.getFolderPath())
     folder.execute()

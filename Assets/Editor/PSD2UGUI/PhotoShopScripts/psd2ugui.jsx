@@ -65,22 +65,14 @@ var gameScreenHeight = 1080
 var exportImagePlan = 1
 //#endregion 可修改的字段
 
-//#region 私有字段
+//#region 公开可访问的字段
+//配置信息
 var config
-var gameScreenSize
+//主文档
 var mainDoc
+//#endregion 公开可访问的字段
 
-//ui界面上用到的字段
-//是否开启适配
-var enableFit = false
-//相同图片是否只导出一张
-var onlyOneImage = false
-//导出路径
-var exportPath
-//锚点类型
-var pivotType
-//导出类型
-var layerExportType
+//#region 私有字段
 //进度条相关
 var progressBar
 var progressIndex
@@ -103,21 +95,36 @@ function Main() {
         ShowError("psd尚未保存，请保存后再操作")
     }
 
-    //锚点模式默认为居中
-    pivotType = PivotType.Center
-    //导出类型默认是只导出标记并显示的图层
-    layerExportType = LayerExportType.EnableAndTag
-    var psdSize = new Vector2(activeDocument.width.value, activeDocument.height.value)
-    gameScreenSize = new Vector2(gameScreenWidth, gameScreenHeight)
+    //私有成员
+    var privateVariables = {
+        //是否开启适配
+        enableFit: false,
+        //相同图片是否只导出一张
+        onlyOneImage: false,
+        //PSD名字
+        psdName: activeDocument.name,
+        //PSD路径
+        psdPath: activeDocument.path,
+        //导出路径
+        exportPath: null,
+        //锚点类型 默认为居中
+        pivotType: PivotType.Center,
+        //导出类型 默认是只导出标记并显示的图层
+        layerExportType: LayerExportType.EnableAndTag,
+        //PSD尺寸大小
+        psdSize: new Vector2(activeDocument.width.value, activeDocument.height.value),
+        //游戏画面大小
+        gameScreenSize: new Vector2(gameScreenWidth, gameScreenHeight),
+    }
 
-    var resolutionStr = String.format("     当前PSD分辨率：{0}，当前配置的游戏分辨率: {1}", psdSize, gameScreenSize)
+    var resolutionStr = String.format("     当前PSD分辨率：{0}，当前配置的游戏分辨率: {1}", privateVariables.psdSize, privateVariables.gameScreenSize)
     new MyWindow("提示", "PSD导出UGUI配置" + resolutionStr, function (win) {
         //开始导出时，禁用掉界面点击
         //这里如果在导出中Ps出现异常情况，则关闭不了这个窗口了，直到杀进程再开，所以这个先保留默认
         // win.enabled = false
 
         try {
-            StartExport(activeDocument, win)
+            StartExport(activeDocument, privateVariables)
         } catch (error) {
             if (error.fileName == "customException") {
                 return false;
@@ -129,6 +136,12 @@ function Main() {
             // str += "\nstack:" + $.stack
             ShowError(str)
         }
+        finally {
+            if (mainDoc) {
+                mainDoc.close(SaveOptions.DONOTSAVECHANGES)
+            }
+        }
+
         return win.close()
     }, function (win) {
 
@@ -144,160 +157,145 @@ function Main() {
         //导出路径
         UIExtensions.AddGroup(win, "导出路径", function (group) {
             var etext = group.add("editText")
-            var docName = activeDocument.name
-            var docPath = activeDocument.path
-            exportPath = String.format("{0}/../PsdConfig/PSDConfig_{1}", docPath, docName.substring(0, docName.length - 4))
-            etext.text = exportPath
+            var docName = privateVariables.psdName
+            var docPath = privateVariables.psdPath
+            privateVariables.exportPath = String.format("{0}/../PsdConfig/PSDConfig_{1}", docPath, docName.substring(0, docName.length - 4))
+            etext.text = privateVariables.exportPath
             etext.onChange = function () {
-                exportPath = etext.text
+                privateVariables.exportPath = etext.text
             }
         })
 
         //导出类型
         UIExtensions.AddGroup(win, "导出类型", function (group) {
             UIExtensions.AddDropDownList(group, LayerExportType, LayerExportType.EnableAndTag, function (drop) {
-                layerExportType = drop.selection.text
-                ShowMsg("layerExportType:" + layerExportType)
+                privateVariables.layerExportType = drop.selection.text
+                ShowMsg("layerExportType:" + privateVariables.layerExportType)
             })
         })
 
         //锚点类型
         UIExtensions.AddGroup(win, "锚点类型", function (group) {
             UIExtensions.AddDropDownList(group, PivotType, PivotType.Center, function (drop) {
-                pivotType = drop.selection.text
-                ShowMsg("pivotType:" + pivotType)
+                privateVariables.pivotType = drop.selection.text
+                ShowMsg("pivotType:" + privateVariables.pivotType)
             })
         })
 
         //是否开启适配选项
         UIExtensions.AddGroup(win, "是否开启适配", function (group) {
             var checkbox = group.add("checkbox")
-            checkbox.value = enableFit
+            checkbox.value = privateVariables.enableFit
             checkbox.onClick = function () {
-                enableFit = checkbox.value
-                ShowMsg("enableFit:" + enableFit)
+                privateVariables.enableFit = checkbox.value
+                ShowMsg("enableFit:" + privateVariables.enableFit)
             }
-            group.enabled = psdSize.toString() != gameScreenSize.toString()
+            group.enabled = privateVariables.psdSize.toString() != privateVariables.gameScreenSize.toString()
         })
 
         //相同图片是否只导出一张
-        UIExtensions.AddGroup(win, "相同图片是否只导出一张", function (group) {
+        UIExtensions.AddGroup(win, "相同图片是否只导出一张(如果图片过多，此过程会很慢)", function (group) {
             var checkbox = group.add("checkbox")
-            checkbox.value = onlyOneImage
+            checkbox.value = privateVariables.onlyOneImage
             checkbox.onClick = function () {
-                onlyOneImage = checkbox.value
-                ShowMsg("onlyOneImage:" + onlyOneImage)
+                privateVariables.onlyOneImage = checkbox.value
+                ShowMsg("onlyOneImage:" + privateVariables.onlyOneImage)
             }
         })
     })
 }
 
-//#region ps原生Layer类型转换成自定义Layer类型
 //开始导出
-function StartExport(doc) {
+function StartExport(doc, info) {
     //复制一份psd文档
     var sourceDoc = doc
     mainDoc = doc.duplicate("temp", false)
     doc = mainDoc
     activeDocument = mainDoc
 
-    try {
-        //检查残留文件夹
-        var info = {
-            path: sourceDoc.path,
-            name: sourceDoc.name,
-            width: sourceDoc.width,
-            height: sourceDoc.height
-        }
-        config = new Config(doc, info, null, exportPath, pivotType, enableFit)
-        var fileConfig = new FileConfig(config)
-        var path = fileConfig.getFolderPath()
-        var folder = new Folder(path)
-        var files = folder.getFiles()
-        if (files && files.length > 0) {
-            new MyWindow("警告", String.format("该文件夹“{0}”不为空，是否清空再生成？", path), function (win) {
-                for (var i = 0; i < files.length; i++) {
-                    var item = files[i]
-                    item.remove()
-                }
-                return win.close()
-            }, function (win) {
-                return win.close()
-            }, function (win) {
-                //ongui
-            }, "清空文件夹再生成", "直接覆盖")
-        }
-
-        //在你打开psd后，如果没选中任意一个Layer时，有时候导出会报错，所以就有了下面这块奇葩的代码
-        //开始的时候需要选中一个Layer，而且还不能是当前选中的Layer，还有个当activeLayer设置后，会自动把该Layer的visible设置为true
-        if (doc.layers.length > 0) {
-            var tempActiveLayer = doc.activeLayer
-            for (var i = 0; i < doc.layers.length; i++) {
-                var tempLayer = doc.layers[i]
-                if (tempLayer != tempActiveLayer) {
-                    var visible = tempLayer.visible
-                    doc.activeLayer = tempLayer
-                    tempLayer.visible = visible
-                    break
-                }
+    //检查残留文件夹
+    config = new Config(doc, info, null)
+    var fileConfig = new FileConfig(config)
+    var path = fileConfig.getFolderPath()
+    var folder = new Folder(path)
+    var files = folder.getFiles()
+    if (files && files.length > 0) {
+        new MyWindow("警告", String.format("该文件夹“{0}”不为空，是否清空再生成？", path), function (win) {
+            for (var i = 0; i < files.length; i++) {
+                var item = files[i]
+                item.remove()
             }
-        }
+            return win.close()
+        }, function (win) {
+            return win.close()
+        }, function (win) {
+            //ongui
+        }, "清空文件夹再生成", "直接覆盖")
+    }
 
-        //图层集合(只包含根节点的)
-        var infos = LayerExtensions.GetLayerInfos(doc, doc.layers)
-        config.layers = infos
-
-        if (infos.length <= 0) {
-            ShowError("无可导出信息")
-            return
-        }
-
-        //保存配置
-        var startRulerUnits = app.preferences.rulerUnits
-        var startTypeUnits = app.preferences.typeUnits
-        var startDisplayDialogs = app.displayDialogs
-        //修改配置
-        app.displayDialogs = DialogModes.NO
-        app.preferences.rulerUnits = Units.PIXELS
-        app.preferences.typeUnits = TypeUnits.PIXELS
-
-        //设置进度
-        progressIndex = 1
-        progressTotalCount = 0
-        function getTotalCount(list) {
-            for (var i = 0; i < list.length; i++) {
-                var info = list[i]
-                if (info instanceof Layer) {
-                    progressTotalCount = progressTotalCount + 1
-                }
-                else if (info instanceof LayerSet) {
-                    getTotalCount(info.layers)
-                }
+    //在你打开psd后，如果没选中任意一个Layer时，有时候导出会报错，所以就有了下面这块奇葩的代码
+    //开始的时候需要选中一个Layer，而且还不能是当前选中的Layer，还有个当activeLayer设置后，会自动把该Layer的visible设置为true
+    if (doc.layers.length > 0) {
+        var tempActiveLayer = doc.activeLayer
+        for (var i = 0; i < doc.layers.length; i++) {
+            var tempLayer = doc.layers[i]
+            if (tempLayer != tempActiveLayer) {
+                var visible = tempLayer.visible
+                doc.activeLayer = tempLayer
+                tempLayer.visible = visible
+                break
             }
-        }
-        getTotalCount(infos)
-
-        //导出
-        for (var i = 0, totalCount = infos.length; i < totalCount; i++) {
-            infos[i].export(path)
-        }
-
-        fileConfig.save()
-
-        //还原配置
-        app.preferences.rulerUnits = startRulerUnits
-        app.preferences.typeUnits = startTypeUnits
-        app.displayDialogs = startDisplayDialogs
-
-        //导出成功后打开文件夹
-        fileConfig.showInExplorer()
-    } catch (error) {
-        ShowError(error.toString())
-    } finally {
-        if (mainDoc != null) {
-            mainDoc.close(SaveOptions.DONOTSAVECHANGES)
         }
     }
+
+    //图层集合(只包含根节点的)
+    var infos = LayerExtensions.GetLayerInfos(doc, doc.layers)
+    config.layers = infos
+
+    if (infos.length <= 0) {
+        ShowError("无可导出信息")
+        return
+    }
+
+    //保存配置
+    var startRulerUnits = app.preferences.rulerUnits
+    var startTypeUnits = app.preferences.typeUnits
+    var startDisplayDialogs = app.displayDialogs
+    //修改配置
+    app.displayDialogs = DialogModes.NO
+    app.preferences.rulerUnits = Units.PIXELS
+    app.preferences.typeUnits = TypeUnits.PIXELS
+
+    //设置进度
+    progressIndex = 1
+    progressTotalCount = 0
+    function getTotalCount(list) {
+        for (var i = 0; i < list.length; i++) {
+            var info = list[i]
+            if (info instanceof Layer) {
+                progressTotalCount = progressTotalCount + 1
+            }
+            else if (info instanceof LayerSet) {
+                getTotalCount(info.layers)
+            }
+        }
+    }
+    getTotalCount(infos)
+
+    //导出
+    for (var i = 0, totalCount = infos.length; i < totalCount; i++) {
+        infos[i].export(path)
+    }
+
+    fileConfig.save()
+
+    //还原配置
+    app.preferences.rulerUnits = startRulerUnits
+    app.preferences.typeUnits = startTypeUnits
+    app.displayDialogs = startDisplayDialogs
+
+    //导出成功后打开文件夹
+    fileConfig.showInExplorer()
 }
 
 //更新导出进度

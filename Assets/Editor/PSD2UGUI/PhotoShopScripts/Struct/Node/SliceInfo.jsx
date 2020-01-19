@@ -24,6 +24,7 @@ SliceInfo = function (baseLayer) {
 
     this.border = new Vector4(left, top, right, bottom)
 }
+
 //切割九宫格图片
 SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
     //获取裁剪信息
@@ -74,6 +75,7 @@ SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
         ShowError("九宫格信息错误！" + error.toString())
     }
 }
+
 SliceInfo.prototype.toJson = function () {
     return {
         typeName: ComponentType.Sprite,

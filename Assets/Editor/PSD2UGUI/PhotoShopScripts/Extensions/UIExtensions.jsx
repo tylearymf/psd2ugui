@@ -1,7 +1,6 @@
 UIExtensions = function () {
 }
 
-//#region ui 扩展
 //ui 扩展
 UIExtensions.AddGroup = function (win, text, callback) {
     var group = win.add("group")
@@ -23,4 +22,3 @@ UIExtensions.AddDropDownList = function (group, type, defaultValue, callback) {
         callback(drop)
     }
 }
-//#endregion ui 扩展

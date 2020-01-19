@@ -12,7 +12,7 @@ LabelInfo = function (baseLayer) {
 
     //获取描边效果
     var outlineDescriptor = ActionDescriptorExtensions.GetOutlineDescriptor()
-    if (outlineDescriptor != null) {
+    if (outlineDescriptor) {
         ActionDescriptorExtensions.ShowAllKeysByDescriptor(outlineDescriptor)
         var outLineEnableState = ActionDescriptorExtensions.GetValueByDescriptor(outlineDescriptor, "enab")
         if (outLineEnableState) {
@@ -30,7 +30,7 @@ LabelInfo = function (baseLayer) {
     try {
         //这里挺奇怪的，就调一下这个属性justification，他妹的就报错了。。。用hasOwnProperty()又说有这个属性，又不能调用。。所以只能trycatch了。
         var justification = this.textItem.justification
-        if (justification != null && justification != "") {
+        if (justification && justification != "") {
             this.alignment = justification.toString().replace("Justification.", "")
         }
     } catch (error) {
@@ -39,13 +39,14 @@ LabelInfo = function (baseLayer) {
 
     try {
         var direction = this.textItem.direction
-        if (direction != null && direction != "") {
+        if (direction && direction != "") {
             this.direction = direction.toString().replace("Direction.", "")
         }
     } catch (error) {
         // ShowError(error.toString())
     }
 }
+
 LabelInfo.prototype.toJson = function () {
     return {
         typeName: ComponentType.Label,
