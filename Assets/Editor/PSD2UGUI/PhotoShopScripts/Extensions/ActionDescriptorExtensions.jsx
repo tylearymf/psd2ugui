@@ -62,13 +62,11 @@ ActionDescriptorExtensions.GetValueByDescriptor = function (descriptor, key) {
         id = stringIDToTypeID(key)
     }
 
-    var typeName = ""
-    try {
-        typeName = descriptor.getType(id).toString()
-    } catch (error) {
-        ShowMsg(String.format("key:{0},error:{1}", key, error.toString()))
+    if (!descriptor.hasKey(id)) {
+        return null
     }
 
+    var typeName = descriptor.getType(id).toString()
     switch (typeName) {
         case "DescValueType.BOOLEANTYPE":
             return descriptor.getBoolean(id)
