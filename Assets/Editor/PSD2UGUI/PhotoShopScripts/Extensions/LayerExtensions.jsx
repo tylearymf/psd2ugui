@@ -19,6 +19,15 @@ LayerExtensions.GetLayerInfos = function (doc, layers) {
                 {
                     var layer = new Layer(doc, item)
                     if (!layer.isValid()) continue;
+
+                    //栅格化图层
+                    if (item.kind != LayerKind.TEXT) {
+                        try {
+                            item.rasterize(RasterizeType.ENTIRELAYER)
+                        } catch (error) {
+                        }
+                    }
+
                     infos.push(layer)
                 }
                 break;

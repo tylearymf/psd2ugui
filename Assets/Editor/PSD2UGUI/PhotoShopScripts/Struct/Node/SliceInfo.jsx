@@ -1,6 +1,7 @@
 //九宫格切割信息
 SliceInfo = function (baseLayer) {
     SpriteInfo.call(this, baseLayer)
+    this.typeName = ComponentType.Sprite
     this.is9Slice = true
 
     var nodeArgs = this.baseLayer.nodeArgs
@@ -78,8 +79,13 @@ SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
 
 SliceInfo.prototype.toJson = function () {
     return {
-        typeName: ComponentType.Sprite,
+        typeName: this.typeName,
         imageName: this.imageName,
-        border: this.border
+        border: this.border,
+        anchorType: this.anchorType
     }
+}
+
+SliceInfo.isValid = function (layer) {
+    return true
 }

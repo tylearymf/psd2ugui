@@ -27,7 +27,7 @@
 　·已正确命名的并且显示的图层【注意：从图层的根节点出发，必须要有一条命名好了的节点路径，不然无法导出节点】<br/>
 　·所有显示的图层（不用命名节点）<br/>
 　·所有图层(包含隐藏图层且不用命名节点)<br/>
-5、锚点类型：对应RectTransform的Pivot属性<br/>
+5、Pivot类型：对应RectTransform的Pivot属性<br/>
 6、是否开启适配：如果当前PSD分辨率和游戏分辨率不一致则可勾选<br/>
 
 ## 操作方式1的使用说明
@@ -39,7 +39,9 @@
 
 ### PSD中图层的命名规则
 1、xxx@nodeName_nodeType<br/>
-2、xxx@nodeName_nodeType_nodeArg1_nodeArg2_nodeArg3...<br/>
+2、xxx@nodeName_nodeType_anchorType<br/>
+　·anchorType为锚点类型，具体说明看AnchorType.jsx，当第三个参数不匹配AnchorType时则作为nodeArg1参数<br/>
+3、xxx@nodeName_nodeType_nodeArg1_nodeArg2_nodeArg3...<br/>
 　·其中xxx为保留美术命名，方便美术查找节点，美术可随意修改<br/>
 　·nodeName为Prefab中的子节点名<br/>
 　·nodeType为该节点的简写类型<br/>

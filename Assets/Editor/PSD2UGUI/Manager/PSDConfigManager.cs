@@ -52,6 +52,11 @@ namespace PSD2UGUI.Manager
 
             var view = Extensions.NewGo(CurrentPsdName, root.transform);
             ViewParent = (RectTransform)view.transform;
+            ViewParent.anchorMin = Vector2.zero;
+            ViewParent.anchorMax = Vector2.one;
+            ViewParent.pivot = Vector2.one * 0.5F;
+            ViewParent.anchoredPosition3D = Vector3.zero;
+            ViewParent.sizeDelta = Vector2.zero;
 
             EditorCoroutine.StartCoroutine(new EditorWaitForSeconds(0.1F, () =>
             {
@@ -149,6 +154,58 @@ namespace PSD2UGUI.Manager
                 var nodeType = item.JSONNode["nodeTypeName"].Value.ToComponentType();
                 var generate = NodeManager.Instance.GetGenerateNode(nodeType);
                 var info = NodeManager.Instance.GetInstantiaInfo(nodeType, item.JSONNode);
+                var rect = (RectTransform)item.Transform;
+
+                if (info.NodeType == ComponentType.Window)
+                {
+                    rect.anchorMin = Vector2.zero;
+                    rect.anchorMax = Vector2.one;
+                    rect.pivot = Vector2.one * 0.5F;
+                    rect.anchoredPosition3D = Vector3.zero;
+                    rect.sizeDelta = Vector2.zero;
+                }
+
+                if (info.AnchorType != 0)
+                {
+                    var anchor = Vector2.zero;
+                    switch (info.AnchorType)
+                    {
+                        case AnchorType.TopLeft:
+                            anchor = new Vector2(0F, 1F);
+                            break;
+                        case AnchorType.Left:
+                            anchor = new Vector2(0F, 0.5F);
+                            break;
+                        case AnchorType.BottomLeft:
+                            anchor = new Vector2(0F, 0F);
+                            break;
+                        case AnchorType.Top:
+                            anchor = new Vector2(0.5F, 1F);
+                            break;
+                        case AnchorType.Center:
+                            anchor = new Vector2(0.5F, 0.5F);
+                            break;
+                        case AnchorType.Bottom:
+                            anchor = new Vector2(0.5F, 0F);
+                            break;
+                        case AnchorType.TopRight:
+                            anchor = new Vector2(1F, 1F);
+                            break;
+                        case AnchorType.Right:
+                            anchor = new Vector2(1F, 0.5F);
+                            break;
+                        case AnchorType.BottomRight:
+                            anchor = new Vector2(1F, 0F);
+                            break;
+                        default:
+                            throw new NotImplementedException(string.Format("AnchorType:{0} 未实现.", info.AnchorType));
+                    }
+
+                    Extensions.SetAnchor(rect, anchor, false);
+                    Extensions.SetAnchor(rect, anchor, true);
+                    Extensions.SetPivot(rect, anchor);
+                }
+
                 generate.UpdateNode(info, item.Transform.gameObject);
             }
         }

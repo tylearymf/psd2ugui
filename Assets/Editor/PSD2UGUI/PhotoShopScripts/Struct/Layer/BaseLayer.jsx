@@ -15,12 +15,38 @@ BaseLayer = function (doc, layer) {
     //已正确命名的图层
     var nameSplits = this.fullName.split("@")
     if (nameSplits.length == 2) {
-        var nameSplit = nameSplits[1]
-        var nameSplits2 = nameSplit.split("_")
+        var nameSplits2 = nameSplits[1].split("_")
         this.nodeName = nameSplits2[0]
         this.nodeTypeName = nameSplits2[1].toLowerCase()
-        //去除前两个数据
-        nameSplits2.splice(0, 2)
+        var spliceCount = 2
+
+        this.anchorType = ""
+        if (nameSplits2.length > 2) {
+            var anchorType = nameSplits2[2].toUpperCase()
+            for (var key in AnchorType) {
+                var values = AnchorType[key]
+                var isMatch = falsed
+
+                for (var key2 in values) {
+                    if (values[key2].toUpperCase() == anchorType.toUpperCase()) {
+                        isMatch = true
+                        break;
+                    }
+                }
+
+                if (isMatch) {
+                    this.anchorType = key.toString()
+                    break;
+                }
+            }
+
+            if (this.anchorType != "") {
+                spliceCount = 3
+            }
+        }
+
+        //去除前x个数据
+        nameSplits2.splice(0, spliceCount)
         this.nodeArgs = nameSplits2
     }
 
@@ -34,7 +60,7 @@ BaseLayer = function (doc, layer) {
             if (this.nodeTypeName == "") {
                 var sizex = this.bounds.z
                 var sizey = this.bounds.w
-                if (this.layerTypeName == "ArtLayer") {
+                if (this.layerTypeName == NameConst.ArtLayer) {
                     if (this.source.kind == LayerKind.TEXT) {
                         this.nodeTypeName = ComponentType.Label
                     }
@@ -52,23 +78,57 @@ BaseLayer = function (doc, layer) {
             break;
     }
 
-    //去除Unity里面的一些不支持的特殊符号
-    this.nodeName = this.nodeName.replace(/[\/\?\<\>\\\:\*\|\s]/g, "_")
+    this.nodeName = RemoveUnityNotSupportSymbol(this.nodeName)
 
     this.scale_x = gameScreenWidth / this.doc.width.value
     this.scale_y = gameScreenHeight / this.doc.height.value
 
     this.isValid = function () {
+        var result = false
+
         switch (config.layerExportType) {
             case LayerExportType.EnableAndTag:
-                return this.nodeName != "" && this.visible
+                result |= this.nodeName != "" && this.visible
+                break;
             case LayerExportType.EnableLayer:
-                return this.visible
+                result |= this.visible
+                break;
             case LayerExportType.AllLayer:
-                return true
+                result |= true
+                break;
             default:
-                return false
+                ShowError("未实现：" + config.layerExportType)
+                break;
         }
+
+        switch (this.nodeTypeName) {
+            case ComponentType.Buttotn:
+                result &= ButtonInfo.isValid(this.source)
+                break;
+            case ComponentType.Label:
+                result &= LabelInfo.isValid(this.source)
+                break;
+            case ComponentType.Panel:
+                result &= PanelInfo.isValid(this.source)
+                break;
+            case ComponentType.Slice:
+                result &= SliceInfo.isValid(this.source)
+                break;
+            case ComponentType.Sprite:
+                result &= SpriteInfo.isValid(this.source)
+                break;
+            case ComponentType.Texture:
+                result &= TextureInfo.isValid(this.source)
+                break;
+            case ComponentType.Window:
+                result &= WindowInfo.isValid(this.source)
+                break;
+            default:
+                ShowError("未实现：" + this.nodeTypeName)
+                break;
+        }
+
+        return result
     }
 
     this.getPos = function () {

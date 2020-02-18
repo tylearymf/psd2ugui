@@ -11,12 +11,12 @@ Config = function (doc, info, layers) {
     //相同图片是否只导出一张
     this.onlyOneImage = info.onlyOneImage
     //PSD名字 remove .psd
-    this.psdName = info.psdName.substring(0, info.psdName.length - 4)
+    this.psdName = RemoveUnityNotSupportSymbol(info.psdName.substring(0, info.psdName.length - 4))
     //PSD路径
     this.psdPath = info.psdPath
     //导出路径
     this.exportPath = info.exportPath
-    //锚点类型
+    //中心枢轴类型
     this.pivotType = info.pivotType
     //导出类型
     this.layerExportType = info.layerExportType

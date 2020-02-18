@@ -53,3 +53,9 @@ function RGBToHex(r, g, b, a) {
     return red + green + blue + alpha
 }
 //#endregion RGB转Hex扩展
+
+//去除Unity里面的一些不支持的特殊符号
+function RemoveUnityNotSupportSymbol(str) {
+    str = str.replace(/[\/\?\<\>\\\:\*\|\s\.]/g, "_")
+    return str
+}

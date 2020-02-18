@@ -1,4 +1,4 @@
-//锚点类型
+//中心枢轴类型
 PivotType = {
     TopLeft: "TopLeft",
     Left: "Left",

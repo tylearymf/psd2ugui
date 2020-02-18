@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -99,6 +100,32 @@ namespace PSD2UGUI.Extension
         {
             image.texture = ResourceManager.GetTextureByName(PSDConfigManager.Instance.CurrentPsdName, baseInfo.ImageName);
             image.rectTransform.sizeDelta = baseInfo.Size;
+        }
+
+        static public void SetAnchor(RectTransform rect, Vector2 value, bool isMax)
+        {
+            SetAnchorSmart(rect, value.x, 0, isMax, true, true);
+            SetAnchorSmart(rect, value.y, 1, isMax, true, true);
+        }
+
+        static void SetAnchorSmart(RectTransform rect, float value, int axis, bool isMax, bool smart, bool enforceExactValue)
+        {
+            var method = typeof(EditorWindow).Assembly.GetType("UnityEditor.RectTransformEditor").GetMethod("SetAnchorSmart", new Type[] { typeof(RectTransform), typeof(float), typeof(int), typeof(bool), typeof(bool), typeof(bool) });
+            method.Invoke(null, new object[] { rect, value, axis, isMax, smart, enforceExactValue });
+            EditorUtility.SetDirty(rect);
+        }
+
+        static public void SetPivot(RectTransform rect, Vector2 value)
+        {
+            SetPivotSmart(rect, value.x, 0, true, true);
+            SetPivotSmart(rect, value.y, 1, true, true);
+        }
+
+        static void SetPivotSmart(RectTransform rect, float value, int axis, bool smart, bool parentSpace)
+        {
+            var method = typeof(EditorWindow).Assembly.GetType("UnityEditor.RectTransformEditor").GetMethod("SetPivotSmart", new Type[] { typeof(RectTransform), typeof(float), typeof(int), typeof(bool), typeof(bool) });
+            method.Invoke(null, new object[] { rect, value, axis, smart, parentSpace });
+            EditorUtility.SetDirty(rect);
         }
     }
 }

@@ -13,5 +13,5 @@ ComponentType = {
     //窗口
     Window: "wnd",
     //九宫格
-    Slice: "9s",
+    Slice: "9s"
 }

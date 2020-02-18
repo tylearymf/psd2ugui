@@ -43,6 +43,7 @@
 //@include "Struct/Node/WindowInfo.jsx"
 
 //@include "Struct/Unity/PivotType.jsx"
+//@include "Struct/Unity/AnchorType.jsx"
 //@include "Struct/Unity/Vector2.jsx"
 //@include "Struct/Unity/Vector3.jsx"
 //@include "Struct/Unity/Vector4.jsx"
@@ -55,6 +56,8 @@
 $.level = 2
 //是否打开所有提示
 var showDialog = false
+//是否捕获异常
+var istrycatch = $.level != 2
 //#endregion 调试参数
 
 //#region 可修改的字段
@@ -107,7 +110,7 @@ function Main() {
         psdPath: activeDocument.path,
         //导出路径
         exportPath: null,
-        //锚点类型 默认为居中
+        //中心枢轴类型 默认为居中
         pivotType: PivotType.Center,
         //导出类型 默认是只导出标记并显示的图层
         layerExportType: LayerExportType.EnableAndTag,
@@ -123,20 +126,29 @@ function Main() {
         //这里如果在导出中Ps出现异常情况，则关闭不了这个窗口了，直到杀进程再开，所以这个先保留默认
         // win.enabled = false
 
-        try {
-            StartExport(activeDocument, privateVariables)
-        } catch (error) {
-            if (error.fileName == "customException") {
-                return false;
-            }
+        if (istrycatch) {
+            try {
+                StartExport(activeDocument, privateVariables)
+            } catch (error) {
+                if (error.fileName == "customException") {
+                    return false;
+                }
 
-            var str = error.toString()
-            str += "\nfileName:" + error.fileName
-            str += "\nline:" + error.line
-            // str += "\nstack:" + $.stack
-            ShowError(str)
+                var str = error.toString()
+                str += "\nfileName:" + error.fileName
+                str += "\nline:" + error.line
+                // str += "\nstack:" + $.stack
+                ShowError(str)
+            }
+            finally {
+                if (mainDoc) {
+                    mainDoc.close(SaveOptions.DONOTSAVECHANGES)
+                }
+            }
         }
-        finally {
+        else {
+            StartExport(activeDocument, privateVariables)
+
             if (mainDoc) {
                 mainDoc.close(SaveOptions.DONOTSAVECHANGES)
             }
@@ -157,7 +169,7 @@ function Main() {
         //导出路径
         UIExtensions.AddGroup(win, "导出路径", function (group) {
             var etext = group.add("editText")
-            var docName = privateVariables.psdName
+            var docName = RemoveUnityNotSupportSymbol(privateVariables.psdName)
             var docPath = privateVariables.psdPath
             privateVariables.exportPath = String.format("{0}/../PsdConfig/PSDConfig_{1}", docPath, docName.substring(0, docName.length - 4))
             etext.text = privateVariables.exportPath
@@ -174,8 +186,8 @@ function Main() {
             })
         })
 
-        //锚点类型
-        UIExtensions.AddGroup(win, "锚点类型", function (group) {
+        //中心枢轴类型
+        UIExtensions.AddGroup(win, "Pivot类型", function (group) {
             UIExtensions.AddDropDownList(group, PivotType, PivotType.Center, function (drop) {
                 privateVariables.pivotType = drop.selection.text
                 ShowMsg("pivotType:" + privateVariables.pivotType)

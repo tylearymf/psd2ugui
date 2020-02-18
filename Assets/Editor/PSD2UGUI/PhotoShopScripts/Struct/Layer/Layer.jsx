@@ -34,7 +34,7 @@ Layer.prototype.export = function (folderFullName) {
     if (!this.info.hasImage || size.x == 0 || size.y == 0) return
 
     //这里name如果是包含:的话，会导致ps报错，所以直接给定个字符串
-    var tempDoc = app.documents.add(size.x, size.y, this.doc.resolution, "temp", NewDocumentMode.RGB, DocumentFill.TRANSPARENT)
+    var tempDoc = app.documents.add(Math.max(size.x, 2), Math.max(size.y, 2), this.doc.resolution, "temp", NewDocumentMode.RGB, DocumentFill.TRANSPARENT)
     activeDocument = this.doc
     var tempLayer = this.source.duplicate(tempDoc, ElementPlacement.INSIDE)
     var pos = this.getPos()
@@ -59,7 +59,12 @@ Layer.prototype.export = function (folderFullName) {
         return;
     }
 
-    var file = new File(String.format("{0}/{1}.png", folderFullName, exportName))
+    //建立子文件夹
+    var subFolderName = this.info.typeName == ComponentType.Texture ? "Textures" : "Sprites"
+    var subFolder = new Folder(String.format("{0}/{1}", folderFullName, subFolderName))
+    if (!subFolder.exists) subFolder.create()
+
+    var file = new File(String.format("{0}/{1}/{2}.png", folderFullName, subFolderName, exportName))
     if (exportImagePlan == 1) {
         var option = new ExportOptionsSaveForWeb()
         option.format = SaveDocumentType.PNG

@@ -33,9 +33,10 @@ namespace PSD2UGUI.Manager
             return null;
         }
 
-        static string GetImagePath(string psdName, string fileName)
+        static string GetImagePath(string psdName, string fileName, bool isTexture)
         {
-            return string.Format("{0}/{1}_{2}/{3}.png", k_ConfigPrefixPath, k_ConfigName, psdName, fileName);
+            var subFolderName = isTexture ? "Textures" : "Sprites";
+            return string.Format("{0}/{1}_{2}/{3}/{4}.png", k_ConfigPrefixPath, k_ConfigName, psdName, subFolderName, fileName);
         }
 
         static TextureImporter GetImporter(string path)
@@ -46,7 +47,7 @@ namespace PSD2UGUI.Manager
 
         static public void SetSpriteBorder(string psdName, string spriteName, Vector4 border)
         {
-            var path = GetImagePath(psdName, spriteName);
+            var path = GetImagePath(psdName, spriteName, false);
             var importer = GetImporter(path);
             importer.spriteBorder = border;
             importer.SaveAndReimport();
@@ -54,7 +55,7 @@ namespace PSD2UGUI.Manager
 
         static public Sprite GetSpriteByName(string psdName, string spriteName)
         {
-            var path = GetImagePath(psdName, spriteName);
+            var path = GetImagePath(psdName, spriteName, false);
             var importer = GetImporter(path);
             if (importer.textureType != TextureImporterType.Sprite)
             {
@@ -68,7 +69,7 @@ namespace PSD2UGUI.Manager
 
         static public Texture GetTextureByName(string psdName, string textureName)
         {
-            var path = GetImagePath(psdName, textureName);
+            var path = GetImagePath(psdName, textureName, true);
             var importer = GetImporter(path);
             if (importer.textureType != TextureImporterType.Default)
             {

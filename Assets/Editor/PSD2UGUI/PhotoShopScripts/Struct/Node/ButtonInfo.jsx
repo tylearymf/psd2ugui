@@ -1,6 +1,7 @@
 //按钮信息
 ButtonInfo = function (baseLayer) {
     BaseInfo.call(this, baseLayer)
+    this.typeName = ComponentType.Button
 
     //两种模式，
     //·按钮只是容器，图片或者文本在该Layer的子Layer中
@@ -18,8 +19,13 @@ ButtonInfo = function (baseLayer) {
 
 ButtonInfo.prototype.toJson = function () {
     return {
-        typeName: ComponentType.Button,
+        typeName: this.typeName,
         imageName: this.imageName,
-        btnType: this.btnType
+        btnType: this.btnType,
+        anchorType: this.anchorType
     }
+}
+
+ButtonInfo.isValid = function (layer) {
+    return true
 }

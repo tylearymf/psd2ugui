@@ -1,6 +1,7 @@
 //文本信息
 LabelInfo = function (baseLayer) {
     BaseInfo.call(this, baseLayer)
+    this.typeName = ComponentType.Label
     this.textItem = this.baseLayer.source.textItem
     this.content = this.textItem.contents
     this.font = this.textItem.font
@@ -49,7 +50,7 @@ LabelInfo = function (baseLayer) {
 
 LabelInfo.prototype.toJson = function () {
     return {
-        typeName: ComponentType.Label,
+        typeName: this.typeName,
         content: this.content,
         font: this.font,
         fontSize: this.fontSize,
@@ -57,6 +58,13 @@ LabelInfo.prototype.toJson = function () {
         outlineColor: this.outlineColor,
         outlineSize: this.outlineSize,
         alignment: this.alignment,
-        direction: this.direction
+        direction: this.direction,
+        anchorType: this.anchorType
     }
+}
+
+LabelInfo.isValid = function (layer) {
+    //文本为空的时候，不支持导出（font属性会报错）
+    var content = layer.textItem.contents
+    return content != ""
 }

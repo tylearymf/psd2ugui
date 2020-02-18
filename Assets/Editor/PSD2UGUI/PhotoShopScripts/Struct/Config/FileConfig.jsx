@@ -3,7 +3,7 @@ FileConfig = function (config) {
     this.name = "Config.json"
     this.config = config
     this.path = config.psdPath
-    this.folder = config.psdName
+    this.folder = RemoveUnityNotSupportSymbol(config.psdName)
 }
 
 FileConfig.prototype.getFolderPath = function () {
@@ -14,8 +14,10 @@ FileConfig.prototype.getFolderPath = function () {
     else {
         path = this.config.exportPath
     }
+
     var folder = new Folder(path)
     if (!folder.exists) folder.create()
+
     return path
 }
 
