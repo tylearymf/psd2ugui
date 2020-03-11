@@ -30,9 +30,9 @@ namespace PSD2UGUI.Generator
             else if (nodeArgs.Length == 4)
             {
                 border.x = int.Parse(nodeArgs[0]);
-                border.y = int.Parse(nodeArgs[1]);
+                border.y = int.Parse(nodeArgs[3]);
                 border.z = int.Parse(nodeArgs[2]);
-                border.w = int.Parse(nodeArgs[3]);
+                border.w = int.Parse(nodeArgs[1]);
             }
 
             ResourceManager.SetSpriteBorder(PSDConfigManager.Instance.CurrentPsdName, info.ImageName, border);

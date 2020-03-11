@@ -25,7 +25,7 @@ BaseLayer = function (doc, layer) {
             var anchorType = nameSplits2[2].toUpperCase()
             for (var key in AnchorType) {
                 var values = AnchorType[key]
-                var isMatch = falsed
+                var isMatch = false
 
                 for (var key2 in values) {
                     if (values[key2].toUpperCase() == anchorType.toUpperCase()) {

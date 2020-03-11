@@ -35,45 +35,75 @@ SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
     var right = this.border.z
     var bottom = this.border.w
 
-    if (right <= 0 && left <= 0 && bottom && top <= 0) {
+    if (left < 0 || right < 0 || bottom < 0 || top < 0) {
         ShowError("九宫格信息错误！有效裁剪区域小于0")
     }
 
+    if ((left + right) > size.x || (top + bottom) > size.y) {
+        ShowError("九宫格信息错误！裁剪区域大于图片尺寸")
+    }
+
     try {
-        //复制两份图层
-        var leftPartDoc = tempDoc.duplicate("leftpart", true)
-        var rightPartDoc = tempDoc.duplicate("rightpart", true)
+        //复制四份图层
+        var leftTopPartDoc = tempDoc.duplicate("leftTopPart", true)
+        var leftTopLayer = null
+
+        var rightTopPartDoc = tempDoc.duplicate("rightTopPart", true)
+        var rightTopLayer = null
+
+        var leftBottomPartDoc = tempDoc.duplicate("leftBottomPart", true)
+        var leftBottomLayer = null
+
+        var rightBottomPartDoc = tempDoc.duplicate("rightBottomPart", true)
+        var rightBottomLayer = null
 
         //移除原图层
         activeDocument = tempDoc
         tempLayer.remove()
 
-        //裁剪左半部分
-        activeDocument = leftPartDoc
+        //开始裁剪
         //crop方法的bounds:left top right bottom，其中四个点都是以左上角为基准点计算的
-        leftPartDoc.crop([0, top, left, size.y - bottom])
-        var layer = leftPartDoc.layers[0]
-        var leftPartLayer = layer.duplicate(tempDoc, ElementPlacement.INSIDE)
-        leftPartDoc.close(SaveOptions.DONOTSAVECHANGES)
 
-        //裁剪右半部分
-        activeDocument = rightPartDoc
-        rightPartDoc.crop([size.x - right, top, size.x, size.y - bottom])
-        var layer = rightPartDoc.layers[0]
-        var rightPartLayer = layer.duplicate(tempDoc, ElementPlacement.INSIDE)
-        rightPartDoc.close(SaveOptions.DONOTSAVECHANGES)
+        //裁剪左上部分
+        activeDocument = leftTopPartDoc
+        leftTopPartDoc.crop([0, 0, left, top])
+        leftTopLayer = leftTopPartDoc.layers[0].duplicate(tempDoc, ElementPlacement.INSIDE)
+        leftTopPartDoc.close(SaveOptions.DONOTSAVECHANGES)
 
-        //调整左半部分和右半部分的位置
+        //裁剪右上部分
+        activeDocument = rightTopPartDoc
+        rightTopPartDoc.crop([size.x - right, 0, size.x, top])
+        rightTopLayer = rightTopPartDoc.layers[0].duplicate(tempDoc, ElementPlacement.INSIDE)
+        rightTopPartDoc.close(SaveOptions.DONOTSAVECHANGES)
+
+        //裁剪左下部分
+        activeDocument = leftBottomPartDoc
+        leftBottomPartDoc.crop([0, size.y - bottom, left, size.y])
+        leftBottomLayer = leftBottomPartDoc.layers[0].duplicate(tempDoc, ElementPlacement.INSIDE)
+        leftBottomPartDoc.close(SaveOptions.DONOTSAVECHANGES)
+
+        //裁剪右下部分
+        activeDocument = rightBottomPartDoc
+        rightBottomPartDoc.crop([size.x - right, size.y - bottom, size.x, size.y])
+        rightBottomLayer = rightBottomPartDoc.layers[0].duplicate(tempDoc, ElementPlacement.INSIDE)
+        rightBottomPartDoc.close(SaveOptions.DONOTSAVECHANGES)
+
+        //调整位置
         activeDocument = tempDoc
-        var leftPartBounds = leftPartLayer.bounds
-        leftPartLayer.translate(-leftPartBounds[0], -leftPartBounds[1])
-        var rightPartBounds = rightPartLayer.bounds
-        rightPartLayer.translate(-rightPartBounds[0] + leftPartBounds[2] - 1, -rightPartBounds[1])
-        //合并左半部分和右半部分为一个图层
+        var leftTopBounds = leftTopLayer.bounds
+        leftTopLayer.translate(-leftTopBounds[0], -leftTopBounds[1])
+        var rightTopBounds = rightTopLayer.bounds
+        rightTopLayer.translate(-rightTopBounds[0] + left, -rightTopBounds[1])
+        var leftBottomBounds = leftBottomLayer.bounds
+        leftBottomLayer.translate(-leftBottomBounds[0], -leftBottomBounds[1] + top)
+        var rightBottomBounds = rightBottomLayer.bounds
+        rightBottomLayer.translate(-rightBottomBounds[0] + left, -rightBottomBounds[1] + top)
+
+        //合并为一个图层
         tempDoc.mergeVisibleLayers()
         tempDoc.trim(TrimType.TRANSPARENT)
     } catch (error) {
-        ShowError("九宫格信息错误！" + error.toString())
+        ShowError("导出九宫格图片错误！" + error.toString())
     }
 }
 
