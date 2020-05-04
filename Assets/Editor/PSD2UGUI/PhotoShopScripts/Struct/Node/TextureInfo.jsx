@@ -2,16 +2,23 @@
 //大图信息
 TextureInfo = function (baseLayer) {
     BaseInfo.call(this, baseLayer)
-    this.typeName = ComponentType.Texture
+    this.typeName = ComponentType.TEXTURE
     this.hasImage = true
-    this.imageName = String.format("{0}_{1}_{2}", this.baseLayer.nodeName, this.baseLayer.nodeTypeName, config.getImageSuffixIndex())
+    this.isCommon = baseLayer.isCommon
 }
 
-TextureInfo.prototype.toJson = function () {
+//在构造方法后会被调用
+TextureInfo.prototype.UpdateMembers = function () {
+    this.imageName = this.baseLayer.getExportName()
+}
+
+TextureInfo.prototype.toJSON = function () {
     return {
         typeName: this.typeName,
         imageName: this.imageName,
-        anchorType: this.anchorType
+        anchorType: this.anchorType,
+        symbolType: this.symbolType,
+        isCommon: this.isCommon,
     }
 }
 

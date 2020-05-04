@@ -5,25 +5,25 @@ NodeFactory = function () {
 NodeFactory.GetInfoByTypeName = function (baseLayer) {
     var nodeTypeName = baseLayer.nodeTypeName
     mainDoc.activeLayer = baseLayer.source
-    if (nodeTypeName == ComponentType.Label) {
+    if (nodeTypeName == ComponentType.LABEL) {
         return new LabelInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Sprite) {
+    else if (nodeTypeName == ComponentType.SPRITE) {
         return new SpriteInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Slice) {
+    else if (nodeTypeName == ComponentType.SLICE) {
         return new SliceInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Texture) {
+    else if (nodeTypeName == ComponentType.TEXTURE) {
         return new TextureInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Button) {
+    else if (nodeTypeName == ComponentType.BUTTON) {
         return new ButtonInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Panel) {
+    else if (nodeTypeName == ComponentType.PANEL) {
         return new PanelInfo(baseLayer)
     }
-    else if (nodeTypeName == ComponentType.Window) {
+    else if (nodeTypeName == ComponentType.WINDOW) {
         return new WindowInfo(baseLayer)
     }
 

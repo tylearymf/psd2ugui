@@ -1,17 +1,17 @@
 //key:节点类型,value:简短类型标记
 ComponentType = {
     //文本
-    Label: "lab",
+    LABEL: "lab",
     //精灵、小图
-    Sprite: "img",
+    SPRITE: "img",
     //大图
-    Texture: "rimg",
+    TEXTURE: "rimg",
     //按钮
-    Button: "btn",
+    BUTTON: "btn",
     //面板
-    Panel: "pnl",
+    PANEL: "pnl",
     //窗口
-    Window: "wnd",
+    WINDOW: "wnd",
     //九宫格
-    Slice: "9s"
+    SLICE: "9s"
 }

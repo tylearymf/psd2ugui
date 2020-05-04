@@ -1,10 +1,10 @@
-InitJson()
+InitJSON()
 
-function InitJson() {
-    if (typeof Json != "undefined")
+function InitJSON() {
+    if (typeof JSON != "undefined")
         return;
 
-    Json = {}
+    JSON = {}
 
     var rx_one = /^[\],:{}\s]*$/
     var rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g
@@ -24,9 +24,9 @@ function InitJson() {
         return this.valueOf()
     }
 
-    if (typeof Date.prototype.toJson !== "function") {
+    if (typeof Date.prototype.toJSON !== "function") {
 
-        Date.prototype.toJson = function () {
+        Date.prototype.toJSON = function () {
 
             return isFinite(this.valueOf())
                 ? (
@@ -46,9 +46,9 @@ function InitJson() {
                 : null
         }
 
-        Boolean.prototype.toJson = this_value
-        Number.prototype.toJson = this_value
-        String.prototype.toJson = this_value
+        Boolean.prototype.toJSON = this_value
+        Number.prototype.toJSON = this_value
+        String.prototype.toJSON = this_value
     }
 
     var gap
@@ -86,14 +86,14 @@ function InitJson() {
         var partial
         var value = holder[key]
 
-        // If the value has a toJson method, call it to obtain a replacement value.
+        // If the value has a toJSON method, call it to obtain a replacement value.
 
         if (
             value
             && typeof value === "object"
-            && typeof value.toJson === "function"
+            && typeof value.toJSON === "function"
         ) {
-            value = value.toJson(key)
+            value = value.toJSON(key)
         }
 
         // If we were called with a replacer function, then call the replacer to
@@ -111,7 +111,7 @@ function InitJson() {
 
             case "number":
 
-                // Json numbers must be finite. Encode non-finite numbers as null.
+                // JSON numbers must be finite. Encode non-finite numbers as null.
 
                 return (isFinite(value))
                     ? String(value)
@@ -148,7 +148,7 @@ function InitJson() {
                 if (Object.prototype.toString.apply(value) === "[object Array]") {
 
                     // The value is an array. Stringify every element. Use null as a placeholder
-                    // for non-Json values.
+                    // for non-JSON values.
 
                     length = value.length
                     for (i = 0; i < length; i += 1) {
@@ -222,8 +222,8 @@ function InitJson() {
         }
     }
 
-    // If the Json object does not yet have a stringify method, give it one.
-    if (typeof Json.stringify !== "function") {
+    // If the JSON object does not yet have a stringify method, give it one.
+    if (typeof JSON.stringify !== "function") {
         meta = {    // table of character substitutions
             "\b": "\\b",
             "\t": "\\t",
@@ -233,10 +233,10 @@ function InitJson() {
             "\"": "\\\"",
             "\\": "\\\\"
         }
-        Json.stringify = function (value, replacer, space) {
+        JSON.stringify = function (value, replacer, space) {
 
             // The stringify method takes a value and an optional replacer, and an optional
-            // space parameter, and returns a Json text. The replacer can be a function
+            // space parameter, and returns a JSON text. The replacer can be a function
             // that can replace values, or an array of strings that will select the keys.
             // A default replacer method can be provided. Use of the space parameter can
             // produce text that is more easily readable.
@@ -267,7 +267,7 @@ function InitJson() {
                 typeof replacer !== "object"
                 || typeof replacer.length !== "number"
             )) {
-                throw new Error("Json.stringify")
+                throw new Error("JSON.stringify")
             }
 
             // Make a fake root object containing our value under the key of "".
@@ -277,12 +277,12 @@ function InitJson() {
         }
     }
 
-    // If the Json object does not yet have a parse method, give it one.
-    if (typeof Json.parse !== "function") {
-        Json.parse = function (text, reviver) {
+    // If the JSON object does not yet have a parse method, give it one.
+    if (typeof JSON.parse !== "function") {
+        JSON.parse = function (text, reviver) {
 
             // The parse method takes a text and an optional reviver function, and returns
-            // a JavaScript value if the text is a valid Json text.
+            // a JavaScript value if the text is a valid JSON text.
 
             var j
 
@@ -326,13 +326,13 @@ function InitJson() {
             }
 
             // In the second stage, we run the text against regular expressions that look
-            // for non-Json patterns. We are especially concerned with "()" and "new"
+            // for non-JSON patterns. We are especially concerned with "()" and "new"
             // because they can cause invocation, and "=" because it can cause mutation.
             // But just to be safe, we want to reject all unexpected forms.
 
             // We split the second stage into 4 regexp operations in order to work around
             // crippling inefficiencies in IE's and Safari's regexp engines. First we
-            // replace the Json backslash pairs with "@" (a non-Json character). Second, we
+            // replace the JSON backslash pairs with "@" (a non-JSON character). Second, we
             // replace all simple value tokens with "]" characters. Third, we delete all
             // open brackets that follow a colon or comma or that begin the text. Finally,
             // we look to see that the remaining characters are only whitespace or "]" or
@@ -362,9 +362,9 @@ function InitJson() {
                     : j
             }
 
-            // If the text is not Json parseable, then a SyntaxError is thrown.
+            // If the text is not JSON parseable, then a SyntaxError is thrown.
 
-            throw new SyntaxError("Json.parse")
+            throw new SyntaxError("JSON.parse")
         }
     }
 }

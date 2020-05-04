@@ -50,36 +50,66 @@
 
 //#endregion 引用其他js文件
 
+
+
 //#region 调试参数
+
 //0 (no debugging), 1 (break on runtime errors), or 2 (full debug mode).
 //如果要调试就设置为2，然后出现异常的时候，ps会自动打开Adobe ExtendScript Toolkit CC并挂起ps
-$.level = 2
+$.level = 0
+
 //是否打开所有提示
 var showDialog = false
+
 //是否捕获异常
 var istrycatch = $.level != 2
+
 //#endregion 调试参数
 
+
+
 //#region 可修改的字段
+
 //游戏分辨率设置
 var gameScreenWidth = 1920
 var gameScreenHeight = 1080
+
 //导出图片方案
 var exportImagePlan = 1
+
+//第一个窗口名
+var firstWindowName = ""
+//第一个的面板名
+var firstPanelName = ""
 //#endregion 可修改的字段
 
+
+
 //#region 公开可访问的字段
-//配置信息
+
+//基本配置信息
 var config
+
+//文件目录配置信息
+var fileConfig
+
 //主文档
 var mainDoc
+
+//导出图片名字典
+var exportNameDic = {}
+
 //#endregion 公开可访问的字段
 
+
+
 //#region 私有字段
+
 //进度条相关
 var progressBar
 var progressIndex
 var progressTotalCount
+
 //#endregion 私有字段
 
 //执行转换
@@ -98,22 +128,36 @@ function Main() {
         ShowError("psd尚未保存，请保存后再操作")
     }
 
+    //保存配置
+    var startRulerUnits = app.preferences.rulerUnits
+    var startTypeUnits = app.preferences.typeUnits
+    var startDisplayDialogs = app.displayDialogs
+    //修改配置
+    app.displayDialogs = DialogModes.NO
+    app.preferences.rulerUnits = Units.PIXELS
+    app.preferences.typeUnits = TypeUnits.PIXELS
+
+    //还原配置
+    function RevertAppSetting(ruleUnit, typeUnit, dialogType) {
+        app.preferences.rulerUnits = ruleUnit
+        app.preferences.typeUnits = typeUnit
+        app.displayDialogs = dialogType
+    }
+
     //私有成员
     var privateVariables = {
         //是否开启适配
         enableFit: false,
         //相同图片是否只导出一张
         onlyOneImage: false,
-        //PSD名字
-        psdName: activeDocument.name,
+        //模块名
+        moduleName: activeDocument.name,
         //PSD路径
         psdPath: activeDocument.path,
-        //导出路径
-        exportPath: null,
         //中心枢轴类型 默认为居中
         pivotType: PivotType.Center,
         //导出类型 默认是只导出标记并显示的图层
-        layerExportType: LayerExportType.EnableAndTag,
+        layerExportType: LayerExportType.EnableLayer,
         //PSD尺寸大小
         psdSize: new Vector2(activeDocument.width.value, activeDocument.height.value),
         //游戏画面大小
@@ -127,6 +171,7 @@ function Main() {
         // win.enabled = false
 
         if (istrycatch) {
+            var isError = false
             try {
                 StartExport(activeDocument, privateVariables)
             } catch (error) {
@@ -134,6 +179,7 @@ function Main() {
                     return false;
                 }
 
+                isError = true
                 var str = error.toString()
                 str += "\nfileName:" + error.fileName
                 str += "\nline:" + error.line
@@ -141,13 +187,19 @@ function Main() {
                 ShowError(str)
             }
             finally {
-                if (mainDoc) {
+                //还原配置
+                RevertAppSetting(startRulerUnits, startTypeUnits, startDisplayDialogs)
+
+                //如果出现错误的时候，要保留现场，而不是清理现场
+                if (!isError && mainDoc) {
                     mainDoc.close(SaveOptions.DONOTSAVECHANGES)
                 }
             }
         }
         else {
             StartExport(activeDocument, privateVariables)
+            //还原配置
+            RevertAppSetting(startRulerUnits, startTypeUnits, startDisplayDialogs)
 
             if (mainDoc) {
                 mainDoc.close(SaveOptions.DONOTSAVECHANGES)
@@ -166,21 +218,20 @@ function Main() {
             progressBar.value = 0
         })
 
-        //导出路径
-        UIExtensions.AddGroup(win, "导出路径", function (group) {
+        //模块名
+        UIExtensions.AddGroup(win, "模块名", function (group) {
+            var moduleName = RemoveUnityNotSupportSymbol(privateVariables.moduleName)
             var etext = group.add("editText")
-            var docName = RemoveUnityNotSupportSymbol(privateVariables.psdName)
-            var docPath = privateVariables.psdPath
-            privateVariables.exportPath = String.format("{0}/../PsdConfig/PSDConfig_{1}", docPath, docName.substring(0, docName.length - 4))
-            etext.text = privateVariables.exportPath
+            privateVariables.moduleName = moduleName.substring(0, moduleName.length - 4)
+            etext.text = privateVariables.moduleName
             etext.onChange = function () {
-                privateVariables.exportPath = etext.text
+                privateVariables.moduleName = etext.text
             }
         })
 
         //导出类型
         UIExtensions.AddGroup(win, "导出类型", function (group) {
-            UIExtensions.AddDropDownList(group, LayerExportType, LayerExportType.EnableAndTag, function (drop) {
+            UIExtensions.AddDropDownList(group, LayerExportType, privateVariables.layerExportType, function (drop) {
                 privateVariables.layerExportType = drop.selection.text
                 ShowMsg("layerExportType:" + privateVariables.layerExportType)
             })
@@ -227,16 +278,20 @@ function StartExport(doc, info) {
 
     //检查残留文件夹
     config = new Config(doc, info, null)
-    var fileConfig = new FileConfig(config)
-    var path = fileConfig.getFolderPath()
+    fileConfig = new FileConfig(config)
+    var path = fileConfig.getRootPath()
     var folder = new Folder(path)
+    //getFiles 会返回 文件夹 和 文件
     var files = folder.getFiles()
     if (files && files.length > 0) {
         new MyWindow("警告", String.format("该文件夹“{0}”不为空，是否清空再生成？", path), function (win) {
-            for (var i = 0; i < files.length; i++) {
-                var item = files[i]
-                item.remove()
-            }
+            //files[i].remove()
+            //如果file返回的是个空的文件夹才能直接删除，否则是删不掉的
+            //所以下面直接调用Windows的命令执行删除操作了
+            var fsName = folder.fsName
+            fsName = fsName.replace(/\//g, '\\')
+            var cmd = String.format("rmdir /q /s {0}", fsName)
+            app.system(cmd)
             return win.close()
         }, function (win) {
             return win.close()
@@ -269,15 +324,6 @@ function StartExport(doc, info) {
         return
     }
 
-    //保存配置
-    var startRulerUnits = app.preferences.rulerUnits
-    var startTypeUnits = app.preferences.typeUnits
-    var startDisplayDialogs = app.displayDialogs
-    //修改配置
-    app.displayDialogs = DialogModes.NO
-    app.preferences.rulerUnits = Units.PIXELS
-    app.preferences.typeUnits = TypeUnits.PIXELS
-
     //设置进度
     progressIndex = 1
     progressTotalCount = 0
@@ -296,15 +342,10 @@ function StartExport(doc, info) {
 
     //导出
     for (var i = 0, totalCount = infos.length; i < totalCount; i++) {
-        infos[i].export(path)
+        infos[i].export()
     }
 
     fileConfig.save()
-
-    //还原配置
-    app.preferences.rulerUnits = startRulerUnits
-    app.preferences.typeUnits = startTypeUnits
-    app.displayDialogs = startDisplayDialogs
 
     //导出成功后打开文件夹
     fileConfig.showInExplorer()

@@ -1,20 +1,21 @@
-//文本信息
+﻿//文本信息
 LabelInfo = function (baseLayer) {
     BaseInfo.call(this, baseLayer)
-    this.typeName = ComponentType.Label
+    this.typeName = ComponentType.LABEL
     this.textItem = this.baseLayer.source.textItem
     this.content = this.textItem.contents
     this.font = this.textItem.font
     this.color = this.textItem.color.rgb.hexValue
-    this.fontSize = this.textItem.size.value
     this.labelName = String.format("{0}_{1}_{2}", this.baseLayer.nodeName, this.baseLayer.nodeTypeName, config.getImageSuffixIndex())
+    // this.fontSize = this.textItem.size.value
+    this.fontSize = ActionDescriptorExtensions.GetTextItemSize()
     this.outlineColor = ""
     this.outlineSize = new Vector2()
 
     //获取描边效果
     var outlineDescriptor = ActionDescriptorExtensions.GetOutlineDescriptor()
     if (outlineDescriptor) {
-        ActionDescriptorExtensions.ShowAllKeysByDescriptor(outlineDescriptor)
+        // ActionDescriptorExtensions.ShowAllKeysByDescriptor("label.outline", outlineDescriptor)
         var outLineEnableState = ActionDescriptorExtensions.GetValueByDescriptor(outlineDescriptor, "enab")
         if (outLineEnableState) {
             this.outlineColor = ActionDescriptorExtensions.GetHexColorByDescriptor(outlineDescriptor)
@@ -48,7 +49,7 @@ LabelInfo = function (baseLayer) {
     }
 }
 
-LabelInfo.prototype.toJson = function () {
+LabelInfo.prototype.toJSON = function () {
     return {
         typeName: this.typeName,
         content: this.content,
@@ -59,7 +60,8 @@ LabelInfo.prototype.toJson = function () {
         outlineSize: this.outlineSize,
         alignment: this.alignment,
         direction: this.direction,
-        anchorType: this.anchorType
+        anchorType: this.anchorType,
+        symbolType: this.symbolType,
     }
 }
 

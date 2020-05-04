@@ -1,53 +1,76 @@
-ActionDescriptorExtensions = function () {
+﻿ActionDescriptorExtensions = function () {
 }
 
+// msg为自定义消息，必须设置，否则不显示
 ActionDescriptorExtensions.ShowAllKeysByDescriptor = function (msg, descriptor) {
-    if (!descriptor) {
-        descriptor = msg
-        msg = ""
+    if (!showDialog || !descriptor || msg == undefined) {
+        return
     }
 
     var str = ""
-    if (descriptor) {
-        var typeName = descriptor.typename
-        for (var i = 0; i < descriptor.count; i++) {
-            if (typeName == "ActionDescriptor") {
-                var id = descriptor.getKey(i)
-                str += String.format("{0}. ActionDescriptor ID:{1}, charID:{2}, stringID:{3}, type:{4}", i, id, typeIDToCharID(id), typeIDToStringID(id), descriptor.getType(id))
-            }
-            else if (typeName == "ActionReference") {
-                var id = descriptor.getReference(i).getIndex()
-                str += String.format("{0}. ActionReference ID:{1}", i, id)
-            }
-            else if (typeName == "ActionList") {
-                var id = descriptor.getType(i)
-                str += String.format("{0}. ActionList ID:{0}", i, id)
-            }
-
-            str += "\n\n"
+    str += String.format("count:{0}\n", descriptor.count.toString())
+    var typeName = descriptor.typename
+    for (var i = 0; i < descriptor.count; i++) {
+        if (typeName == "ActionDescriptor") {
+            var id = descriptor.getKey(i)
+            str += String.format("{0}. ActionDescriptor ID:{1}, charID:{2}, stringID:{3}, type:{4}", i, id, typeIDToCharID(id), typeIDToStringID(id), descriptor.getType(id))
         }
+        else if (typeName == "ActionReference") {
+            var id = descriptor.getReference(i).getIndex()
+            str += String.format("{0}. ActionReference ID:{1}", i, id)
+        }
+        else if (typeName == "ActionList") {
+            var id = descriptor.getType(i)
+            str += String.format("{0}. ActionList ID:{0}", i, id)
+        }
+
+        str += "\n"
     }
 
     if (str != "") {
-        ShowMsg(msg + str)
+        msg = String.format("customMsg:{0} descriptorMsg:{1}", msg, str)
+        $.writeln(msg)
+        ShowMsg(msg)
     }
 }
 
-//获取选中的图层的所有附加效果
-ActionDescriptorExtensions.GetEffectsByActiveLayer = function () {
+//获取选中的图层的Descriptor
+ActionDescriptorExtensions.GetLayerDescriptor = function (msg) {
     var reference = new ActionReference()
     reference.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"))
     var layerDescriptor = executeActionGet(reference)
-    var layerEffects = ActionDescriptorExtensions.GetValueByDescriptor(layerDescriptor, "Lefx")
-    ActionDescriptorExtensions.ShowAllKeysByDescriptor(layerEffects)
-    return layerEffects
+    ActionDescriptorExtensions.ShowAllKeysByDescriptor(msg, layerDescriptor)
+    return layerDescriptor
+}
+
+//获取选中的图层的所有附加效果
+ActionDescriptorExtensions.GetEffectsByActiveLayer = function (msg) {
+    var layerDescriptor = ActionDescriptorExtensions.GetLayerDescriptor()
+    var effectDescriptor = ActionDescriptorExtensions.GetValueByDescriptor(layerDescriptor, "Lefx")
+    ActionDescriptorExtensions.ShowAllKeysByDescriptor(msg, effectDescriptor)
+    return effectDescriptor
 }
 
 //获取选中的Layer的描边效果对象
-ActionDescriptorExtensions.GetOutlineDescriptor = function () {
+ActionDescriptorExtensions.GetOutlineDescriptor = function (msg) {
     var layerEffects = ActionDescriptorExtensions.GetEffectsByActiveLayer()
     var outlineDescriptor = ActionDescriptorExtensions.GetValueByDescriptor(layerEffects, "FrFX")
+    ActionDescriptorExtensions.ShowAllKeysByDescriptor(msg, outlineDescriptor)
     return outlineDescriptor
+}
+
+//获取选中的文本的size（textItem.size返回的值不准确）
+ActionDescriptorExtensions.GetTextItemSize = function (msg) {
+    var layerDescriptor = ActionDescriptorExtensions.GetLayerDescriptor()
+    var txtDescriptor = ActionDescriptorExtensions.GetValueByDescriptor(layerDescriptor, "Txt ")
+    var txttDescriptor = ActionDescriptorExtensions.GetValueByDescriptor(txtDescriptor, "Txtt")
+    var element = txttDescriptor.getObjectValue(0)
+    var txtsDescriptor = ActionDescriptorExtensions.GetValueByDescriptor(element, "TxtS")
+    ActionDescriptorExtensions.ShowAllKeysByDescriptor(msg, txtsDescriptor)
+    var size = ActionDescriptorExtensions.GetValueByDescriptor(txtsDescriptor, "impliedFontSize")
+    size = Math.round(size + 0.5)
+
+    return size
 }
 
 //根据Descriptor的Key获取Value

@@ -1,8 +1,9 @@
-//九宫格切割信息
+﻿//九宫格切割信息
 SliceInfo = function (baseLayer) {
     SpriteInfo.call(this, baseLayer)
-    this.typeName = ComponentType.Sprite
+    this.typeName = ComponentType.SLICE
     this.is9Slice = true
+    this.isCommon = baseLayer.isCommon
 
     var nodeArgs = this.baseLayer.nodeArgs
     var left = 0
@@ -91,13 +92,13 @@ SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
         //调整位置
         activeDocument = tempDoc
         var leftTopBounds = leftTopLayer.bounds
-        leftTopLayer.translate(-leftTopBounds[0], -leftTopBounds[1])
+        leftTopLayer.translate(-leftTopBounds[0] + 1, -leftTopBounds[1])
         var rightTopBounds = rightTopLayer.bounds
         rightTopLayer.translate(-rightTopBounds[0] + left, -rightTopBounds[1])
         var leftBottomBounds = leftBottomLayer.bounds
-        leftBottomLayer.translate(-leftBottomBounds[0], -leftBottomBounds[1] + top)
+        leftBottomLayer.translate(-leftBottomBounds[0] + 1, -leftBottomBounds[1] + top - 1)
         var rightBottomBounds = rightBottomLayer.bounds
-        rightBottomLayer.translate(-rightBottomBounds[0] + left, -rightBottomBounds[1] + top)
+        rightBottomLayer.translate(-rightBottomBounds[0] + left, -rightBottomBounds[1] + top - 1)
 
         //合并为一个图层
         tempDoc.mergeVisibleLayers()
@@ -107,12 +108,19 @@ SliceInfo.prototype.sliceSprite = function (tempDoc, tempLayer) {
     }
 }
 
-SliceInfo.prototype.toJson = function () {
+//在构造方法后会被调用
+SliceInfo.prototype.UpdateMembers = function () {
+    this.imageName = this.baseLayer.getExportName()
+}
+
+SliceInfo.prototype.toJSON = function () {
     return {
         typeName: this.typeName,
         imageName: this.imageName,
         border: this.border,
-        anchorType: this.anchorType
+        anchorType: this.anchorType,
+        symbolType: this.symbolType,
+        isCommon: this.isCommon,
     }
 }
 

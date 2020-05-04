@@ -1,16 +1,23 @@
 //精灵信息
 SpriteInfo = function (baseLayer) {
     BaseInfo.call(this, baseLayer)
-    this.typeName = ComponentType.Sprite
+    this.typeName = ComponentType.SPRITE
     this.hasImage = true
-    this.imageName = String.format("{0}_{1}_{2}", this.baseLayer.nodeName, this.baseLayer.nodeTypeName, config.getImageSuffixIndex())
+    this.isCommon = baseLayer.isCommon
 }
 
-SpriteInfo.prototype.toJson = function () {
+//在构造方法后会被调用
+SpriteInfo.prototype.UpdateMembers = function () {
+    this.imageName = this.baseLayer.getExportName()
+}
+
+SpriteInfo.prototype.toJSON = function () {
     return {
         typeName: this.typeName,
         imageName: this.imageName,
-        anchorType: this.anchorType
+        anchorType: this.anchorType,
+        symbolType: this.symbolType,
+        isCommon: this.isCommon,
     }
 }
 

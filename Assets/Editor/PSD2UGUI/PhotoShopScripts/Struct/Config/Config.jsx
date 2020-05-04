@@ -10,12 +10,8 @@ Config = function (doc, info, layers) {
     this.enableFit = info.enableFit
     //相同图片是否只导出一张
     this.onlyOneImage = info.onlyOneImage
-    //PSD名字 remove .psd
-    this.psdName = RemoveUnityNotSupportSymbol(info.psdName.substring(0, info.psdName.length - 4))
     //PSD路径
     this.psdPath = info.psdPath
-    //导出路径
-    this.exportPath = info.exportPath
     //中心枢轴类型
     this.pivotType = info.pivotType
     //导出类型
@@ -24,6 +20,8 @@ Config = function (doc, info, layers) {
     this.psdSize = info.psdSize
     //游戏画面大小
     this.gameScreenSize = info.gameScreenSize
+    //模块名
+    this.moduleName = info.moduleName
 
     switch (this.pivotType) {
         case PivotType.TopLeft:
@@ -68,9 +66,9 @@ Config.prototype.getImageSuffixIndex = function () {
     return this.imageSuffixIndex
 }
 
-Config.prototype.toJson = function () {
+Config.prototype.toJSON = function () {
     return {
-        name: this.psdName,
+        name: this.moduleName,
         size: this.psdSize,
         pivot: this.pivot,
         layers: this.layers

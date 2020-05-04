@@ -3,14 +3,17 @@ LayerSet = function (doc, layer) {
     BaseLayer.call(this, doc, layer)
 
     this.sourceLayers = layer.layers
-    this.layers = LayerExtensions.GetLayerInfos(doc, this.sourceLayers)
+
+    if(this.isValid()){
+        this.layers = LayerExtensions.GetLayerInfos(doc, this.sourceLayers)
+    }
 }
 
 LayerSet.prototype.toString = function () {
-    return Json.stringify(this)
+    return JSON.stringify(this)
 }
 
-LayerSet.prototype.toJson = function () {
+LayerSet.prototype.toJSON = function () {
     return {
         name: this.nodeName,
         layerTypeName: this.layerTypeName,

@@ -1,4 +1,4 @@
-//图层抽象结构
+﻿//图层抽象结构
 BaseLayer = function (doc, layer) {
     this.doc = doc
     this.source = layer
@@ -13,28 +13,41 @@ BaseLayer = function (doc, layer) {
     this.nodeArgs = null
 
     //已正确命名的图层
-    var nameSplits = this.fullName.split("@")
-    if (nameSplits.length == 2) {
-        var nameSplits2 = nameSplits[1].split("_")
-        this.nodeName = nameSplits2[0]
-        this.nodeTypeName = nameSplits2[1].toLowerCase()
+    var nameSplits = this.fullName.split(/@|#/)
+    //如果是图片的，则firstName为图片导出名
+    this.firstName = nameSplits.length == 2 ? nameSplits[0] : ""
+    this.secondName = nameSplits.length == 2 ? nameSplits[1] : ""
+    //是否为公共图片
+    this.isCommon = this.firstName.indexOf("common_") == 0
+    this.firstName = RemoveUnityNotSupportSymbol(this.firstName)
+
+    if (config.layerExportType == LayerExportType.EnableAndTag) {
+        if (this.firstName == "" || this.secondName == "") {
+            doc.activeLayer = layer
+            ShowError(String.format("该图层 \"{0}\" 命名有问题.\n图层已被选中，请修正.", layer.name))
+        }
+    }
+
+    if (this.fullName.indexOf("@") != -1) {
+        this.symbolType = "@"
+    }
+    else if (this.fullName.indexOf("#") != -1) {
+        this.symbolType = "#"
+    }
+
+    if (this.secondName != "") {
+        var nodeArguments = this.secondName.split("_")
+        this.nodeName = nodeArguments[0]
+        if (nodeArguments.length > 1) {
+            this.nodeTypeName = nodeArguments[1]
+        }
         var spliceCount = 2
 
         this.anchorType = ""
-        if (nameSplits2.length > 2) {
-            var anchorType = nameSplits2[2].toUpperCase()
+        if (nodeArguments.length > 2) {
+            var tempAnchorType = nodeArguments[2]
             for (var key in AnchorType) {
-                var values = AnchorType[key]
-                var isMatch = false
-
-                for (var key2 in values) {
-                    if (values[key2].toUpperCase() == anchorType.toUpperCase()) {
-                        isMatch = true
-                        break;
-                    }
-                }
-
-                if (isMatch) {
+                if (AnchorType[key] == tempAnchorType) {
                     this.anchorType = key.toString()
                     break;
                 }
@@ -46,8 +59,8 @@ BaseLayer = function (doc, layer) {
         }
 
         //去除前x个数据
-        nameSplits2.splice(0, spliceCount)
-        this.nodeArgs = nameSplits2
+        nodeArguments.splice(0, spliceCount)
+        this.nodeArgs = nodeArguments
     }
 
     switch (config.layerExportType) {
@@ -62,17 +75,17 @@ BaseLayer = function (doc, layer) {
                 var sizey = this.bounds.w
                 if (this.layerTypeName == NameConst.ArtLayer) {
                     if (this.source.kind == LayerKind.TEXT) {
-                        this.nodeTypeName = ComponentType.Label
+                        this.nodeTypeName = ComponentType.LABEL
                     }
                     else if (sizex < 512 && sizey < 512) {
-                        this.nodeTypeName = ComponentType.Sprite
+                        this.nodeTypeName = ComponentType.SPRITE
                     }
                     else {
-                        this.nodeTypeName = ComponentType.Texture
+                        this.nodeTypeName = ComponentType.TEXTURE
                     }
                 }
                 else {
-                    this.nodeTypeName = ComponentType.Panel
+                    this.nodeTypeName = ComponentType.PANEL
                 }
             }
             break;
@@ -97,35 +110,38 @@ BaseLayer = function (doc, layer) {
                 result |= true
                 break;
             default:
-                ShowError("未实现：" + config.layerExportType)
+                ShowError("导出类型 未实现：" + config.layerExportType)
                 break;
         }
 
-        switch (this.nodeTypeName) {
-            case ComponentType.Buttotn:
-                result &= ButtonInfo.isValid(this.source)
-                break;
-            case ComponentType.Label:
-                result &= LabelInfo.isValid(this.source)
-                break;
-            case ComponentType.Panel:
-                result &= PanelInfo.isValid(this.source)
-                break;
-            case ComponentType.Slice:
-                result &= SliceInfo.isValid(this.source)
-                break;
-            case ComponentType.Sprite:
-                result &= SpriteInfo.isValid(this.source)
-                break;
-            case ComponentType.Texture:
-                result &= TextureInfo.isValid(this.source)
-                break;
-            case ComponentType.Window:
-                result &= WindowInfo.isValid(this.source)
-                break;
-            default:
-                ShowError("未实现：" + this.nodeTypeName)
-                break;
+        if (result) {
+            switch (this.nodeTypeName) {
+                case ComponentType.BUTTON:
+                    result &= ButtonInfo.isValid(this.source)
+                    break;
+                case ComponentType.LABEL:
+                    result &= LabelInfo.isValid(this.source)
+                    break;
+                case ComponentType.PANEL:
+                    result &= PanelInfo.isValid(this.source)
+                    break;
+                case ComponentType.SLICE:
+                    result &= SliceInfo.isValid(this.source)
+                    break;
+                case ComponentType.SPRITE:
+                    result &= SpriteInfo.isValid(this.source)
+                    break;
+                case ComponentType.TEXTURE:
+                    result &= TextureInfo.isValid(this.source)
+                    break;
+                case ComponentType.WINDOW:
+                    result &= WindowInfo.isValid(this.source)
+                    break;
+                default:
+                    doc.activeLayer = layer
+                    ShowError(String.format("节点类型 未实现：'{0}'.\n图层已被选中，请修正.", this.nodeTypeName))
+                    break;
+            }
         }
 
         return result
@@ -182,7 +198,7 @@ BaseLayer = function (doc, layer) {
                 pos.y = psdSize.y / 2 + pos.y - size.y
                 break;
             default:
-                throw new Error("未实现该锚点:" + pivotType)
+                ShowError(String.format("锚点类型 未实现:{0}", pivotType))
         }
 
         if (config.enableFit) {
@@ -208,15 +224,34 @@ BaseLayer = function (doc, layer) {
         return new Vector2(this.bounds.z, this.bounds.w)
     }
 
+    //获取图片导出名
     this.getExportName = function () {
         if (this.info.hasImage) {
-            return this.info.imageName
+            //这里的firstName为“标识符中的第一个字符串”
+            if (this.firstName != "") {
+                if (this.isCommon) {
+                    return this.firstName
+                }
+                else {
+                    return String.format("{0}_{1}", config.moduleName, this.firstName)
+                }
+            }
+
+            return this.imageName
         }
 
+        //这里的nodeName为“图层名”
         return this.nodeName
     }
 
     if (this.isValid()) {
         this.info = NodeFactory.GetInfoByTypeName(this)
+        if (this.info.hasImage) {
+            this.imageName = String.format("{0}_{1}_{2}", this.nodeName, this.nodeTypeName, config.getImageSuffixIndex())
+        }
+
+        if (this.info["UpdateMembers"] != null) {
+            this.info.UpdateMembers()
+        }
     }
 }

@@ -6,6 +6,21 @@ LayerExtensions.GetLayerInfos = function (doc, layers) {
     var infos = new Array()
     for (var i = layers.length - 1; i >= 0; i--) {
         var item = layers[i]
+
+        var isContinue = false
+        switch (config.layerExportType) {
+            case LayerExportType.EnableAndTag:
+                isContinue = !item.visible
+                break;
+            case LayerExportType.EnableLayer:
+                isContinue = !item.visible
+                break;
+            default:
+                isContinue = false
+                break;
+        }
+        if (isContinue) continue;
+
         switch (item.typename) {
             case NameConst.LayerSet:
                 {
