@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using PSD2UGUI.Attribute;
 using PSD2UGUI.Extension;
@@ -11,7 +7,7 @@ using PSD2UGUI.Struct;
 
 namespace PSD2UGUI.Generator
 {
-    [NodeType(ComponentType.Sprite)]
+    [NodeType(ComponentType.SPRITE)]
     class SpriteGenerateNode : Singleton<SpriteGenerateNode>, IGenerateNode
     {
         void IGenerateNode.UpdateNode(BaseInfo baseInfo, GameObject node)

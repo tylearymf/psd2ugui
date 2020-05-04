@@ -1,8 +1,6 @@
-﻿using PSD2UGUI.Manager;
-using SimpleJSON;
+﻿using SimpleJSON;
 using System;
 using UnityEngine;
-using UnityEngine.UI;
 using PSD2UGUI.Extension;
 
 namespace PSD2UGUI.Struct
@@ -33,9 +31,17 @@ namespace PSD2UGUI.Struct
             m_InfoNode = node["info"];
             if (m_InfoNode != null)
             {
+                //设置图片名
                 var image = m_InfoNode["imageName"];
                 ImageName = image == null ? string.Empty : image.Value;
 
+                //设置符号类型
+                SymbolType = m_InfoNode["symbolType"].Value;
+
+                //设置是否为公共资源
+                IsCommonAsset = m_InfoNode["isCommon"].AsBool;
+
+                //设置锚点类型
                 foreach (AnchorType item in Enum.GetValues(typeof(AnchorType)))
                 {
                     var value = item.GetEnumValue();
@@ -82,6 +88,8 @@ namespace PSD2UGUI.Struct
         public float Opacity { protected set; get; }
         public string ImageName { protected set; get; }
         public AnchorType AnchorType { protected set; get; }
+        public string SymbolType { protected set; get; }
+        public bool IsCommonAsset { protected set; get; }
 
 
         public ComponentType NodeType
@@ -90,6 +98,25 @@ namespace PSD2UGUI.Struct
             {
                 return Extension.Extensions.ToComponentType(NodeTypeName);
             }
+        }
+
+        /// <summary>
+        /// 默认切割符
+        /// </summary>
+        /// <returns></returns>
+        public bool IsDefaultSymbol()
+        {
+            return SymbolType == "@";
+        }
+
+        /// <summary>
+        /// 自定义的切割符
+        /// 不同的切割符可对应不同的处理逻辑
+        /// </summary>
+        /// <returns></returns>
+        public bool IsCustomSymbol()
+        {
+            return SymbolType == "#";
         }
     }
 }

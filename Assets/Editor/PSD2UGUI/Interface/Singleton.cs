@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace PSD2UGUI.Interface
+﻿namespace PSD2UGUI.Interface
 {
     class Singleton<T> where T : class, new()
     {

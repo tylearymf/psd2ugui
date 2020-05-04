@@ -1,9 +1,4 @@
 ﻿using PSD2UGUI.Attribute;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PSD2UGUI.Struct
 {
@@ -12,23 +7,25 @@ namespace PSD2UGUI.Struct
     /// </summary>
     public enum AnchorType
     {
-        [EnumValue("TopLeft")]
-        TopLeft = 1,
-        [EnumValue("Left")]
-        Left,
-        [EnumValue("BottomLeft")]
-        BottomLeft,
-        [EnumValue("Top")]
-        Top,
-        [EnumValue("Center")]
-        Center,
-        [EnumValue("Bottom")]
-        Bottom,
-        [EnumValue("TopRight")]
-        TopRight,
-        [EnumValue("Right")]
-        Right,
-        [EnumValue("BottomRight")]
-        BottomRight,
+        [EnumValue("LEFTTOP")]
+        LEFTTOP = 1,
+        [EnumValue("LEFT")]
+        LEFT,
+        [EnumValue("LEFTBOTTOM")]
+        LEFTBOTTOM,
+        [EnumValue("TOP")]
+        TOP,
+        [EnumValue("CENTER")]
+        CENTER,
+        [EnumValue("BOTTOM")]
+        BOTTOM,
+        [EnumValue("RIGHTTOP")]
+        RIGHTTOP,
+        [EnumValue("RIGHT")]
+        RIGHT,
+        [EnumValue("RIGHTBOTTOM")]
+        RIGHTBOTTOM,
+        [EnumValue("STRETCH")]
+        STRETCH,
     }
 }

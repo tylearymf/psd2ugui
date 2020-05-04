@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using PSD2UGUI.Attribute;
@@ -13,7 +9,7 @@ using PSD2UGUI.Manager;
 
 namespace PSD2UGUI.Generator
 {
-    [NodeType(ComponentType.Label)]
+    [NodeType(ComponentType.LABEL)]
     class LabelGenerateNode : Singleton<LabelGenerateNode>, IGenerateNode
     {
         const int k_AdjustFontSize = 10;

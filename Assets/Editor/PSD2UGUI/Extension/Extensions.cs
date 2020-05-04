@@ -2,9 +2,6 @@
 using PSD2UGUI.Manager;
 using PSD2UGUI.Struct;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,13 +42,15 @@ namespace PSD2UGUI.Extension
             return t;
         }
 
-        static public GameObject NewGo(string name, Transform parent)
+        static public GameObject NewGo(string name, Transform parent, bool setLayer = true)
         {
             var go = new GameObject(string.IsNullOrEmpty(name) ? "GameObject" : name);
             go.AddMissingComponent<RectTransform>();
 
             if (parent)
             {
+                SetLayer(go.transform, parent.gameObject.layer);
+
                 var trans = go.transform;
                 trans.SetParent(parent);
 
@@ -63,6 +62,15 @@ namespace PSD2UGUI.Extension
             }
 
             return go;
+        }
+
+        static public void SetLayer(Transform child, int layer)
+        {
+            child.gameObject.layer = layer;
+            foreach (Transform item in child)
+            {
+                SetLayer(item, layer);
+            }
         }
 
         static public Transform FindChildRecursive(this Transform transform, string childName)
@@ -85,9 +93,9 @@ namespace PSD2UGUI.Extension
 
         static public void UpdateImage(Image image, BaseInfo baseInfo)
         {
-            image.sprite = ResourceManager.GetSpriteByName(PSDConfigManager.Instance.CurrentPsdName, baseInfo.ImageName);
+            image.sprite = ResourceManager.GetSpriteByName(PSDConfigManager.Instance.ModuleName, baseInfo.ImageName, baseInfo.IsCommonAsset);
 
-            if (baseInfo.NodeType == ComponentType.Slice)
+            if (baseInfo.NodeType == ComponentType.SLICE)
             {
                 image.rectTransform.sizeDelta = baseInfo.Size;
             }
@@ -98,7 +106,7 @@ namespace PSD2UGUI.Extension
         }
         static public void UpdateTexture(RawImage image, BaseInfo baseInfo)
         {
-            image.texture = ResourceManager.GetTextureByName(PSDConfigManager.Instance.CurrentPsdName, baseInfo.ImageName);
+            image.texture = ResourceManager.GetTextureByName(PSDConfigManager.Instance.ModuleName, baseInfo.ImageName, baseInfo.IsCommonAsset);
             image.rectTransform.sizeDelta = baseInfo.Size;
         }
 

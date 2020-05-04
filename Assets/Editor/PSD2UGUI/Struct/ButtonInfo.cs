@@ -1,15 +1,11 @@
 ﻿using PSD2UGUI.Attribute;
 using SimpleJSON;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine.Assertions;
 
 namespace PSD2UGUI.Struct
 {
-    [NodeType(ComponentType.Button)]
+    [NodeType(ComponentType.BUTTON)]
     class ButtonInfo : BaseInfo
     {
         public enum ButtonType

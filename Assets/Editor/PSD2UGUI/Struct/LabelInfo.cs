@@ -1,15 +1,11 @@
 ﻿using PSD2UGUI.Attribute;
 using SimpleJSON;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace PSD2UGUI.Struct
 {
-    [NodeType(ComponentType.Label)]
+    [NodeType(ComponentType.LABEL)]
     class LabelInfo : BaseInfo
     {
         public enum Direction
@@ -61,14 +57,13 @@ namespace PSD2UGUI.Struct
                     case "left":
                         TextAnchor = TextAnchor.MiddleLeft;
                         break;
-                    case "center":
-                        TextAnchor = TextAnchor.MiddleCenter;
-                        break;
                     case "right":
                         TextAnchor = TextAnchor.MiddleRight;
                         break;
-                    default:
-                        throw new NotImplementedException();
+					case "center":
+					default:                    
+						TextAnchor = TextAnchor.MiddleCenter;
+                        break;
                 }
             }
         }

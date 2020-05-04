@@ -1,6 +1,4 @@
 ﻿using PSD2UGUI.Struct;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PSD2UGUI.Interface

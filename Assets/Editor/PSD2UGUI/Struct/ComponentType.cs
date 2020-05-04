@@ -1,27 +1,22 @@
 ﻿using PSD2UGUI.Attribute;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PSD2UGUI.Struct
 {
     public enum ComponentType
     {
         [EnumValue("lab")]
-        Label,
+        LABEL,
         [EnumValue("img")]
-        Sprite,
+        SPRITE,
         [EnumValue("rimg")]
-        Texture,
+        TEXTURE,
         [EnumValue("btn")]
-        Button,
+        BUTTON,
         [EnumValue("pnl")]
-        Panel,
+        PANEL,
         [EnumValue("wnd")]
-        Window,
+        WINDOW,
         [EnumValue("9s")]
-        Slice,
+        SLICE,
     }
 }

@@ -1,15 +1,10 @@
 ﻿using UnityEngine;
 using SimpleJSON;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System;
-using UnityEngine.Assertions;
 using UnityEngine.UI;
-using PSD2UGUI.Attribute;
 using PSD2UGUI.Extension;
-using PSD2UGUI.Interface;
 using PSD2UGUI.Struct;
 
 namespace PSD2UGUI.Manager
@@ -25,38 +20,41 @@ namespace PSD2UGUI.Manager
             }
         }
 
-        public const string k_ConfigName = "Config.json";
         public Vector2 Pivot { private set; get; }
-        public RectTransform ViewParent { private set; get; }
-        public string CurrentPsdName { private set; get; }
+        public RectTransform GUISystemRoot { private set; get; }
+        public string ModuleName { private set; get; }
 
-        public void ParseConfig(string configPath)
+        public void ParseConfig(string content)
         {
-            var file = new FileInfo(configPath);
-            if (!file.Exists) throw new FileNotFoundException();
+            JSONNode jsonNode = null;
 
-            var content = File.ReadAllText(configPath);
+            try
+            {
+                jsonNode = JSON.Parse(content);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogErrorFormat("配置读取失败！");
+                Debug.LogException(ex);
+                return;
+            }
 
-            var jsonNode = JSON.Parse(content);
+            ModuleName = jsonNode["name"].Value;
 
-            CurrentPsdName = jsonNode["name"].Value;
+            var rootName = "GUISystem";
+            var root = GameObject.Find(rootName);
+            if (!root)
+            {
+                root = Extensions.NewGo("GUISystem", null);
+                root.AddMissingComponent<CanvasScaler>();
+                root.AddMissingComponent<GraphicRaycaster>();
+                var canvas = root.AddMissingComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
 
-            var root = Extensions.NewGo("Root", null);
-            root.AddMissingComponent<CanvasScaler>();
-            root.AddMissingComponent<GraphicRaycaster>();
-            var canvas = root.AddMissingComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
+            GUISystemRoot = (RectTransform)root.transform;
             var layers = jsonNode["layers"].Children;
             Pivot = jsonNode["pivot"].ReadVector2();
-
-            var view = Extensions.NewGo(CurrentPsdName, root.transform);
-            ViewParent = (RectTransform)view.transform;
-            ViewParent.anchorMin = Vector2.zero;
-            ViewParent.anchorMax = Vector2.one;
-            ViewParent.pivot = Vector2.one * 0.5F;
-            ViewParent.anchoredPosition3D = Vector3.zero;
-            ViewParent.sizeDelta = Vector2.zero;
 
             EditorCoroutine.StartCoroutine(new EditorWaitForSeconds(0.1F, () =>
             {
@@ -66,13 +64,13 @@ namespace PSD2UGUI.Manager
                     var index = 0;
 
                     //生成节点
-                    GenerateLayers(layers, ViewParent);
+                    GenerateLayers(layers, GUISystemRoot);
 
                     //处理节点关系
-                    AdjustLayers(layers, ViewParent, nodes, ref index);
+                    AdjustLayers(layers, GUISystemRoot, nodes, ref index);
 
                     //回调事件，更新节点
-                    UpdateNode(nodes, ViewParent);
+                    UpdateNode(nodes, GUISystemRoot);
                 }
                 catch (Exception ex)
                 {
@@ -93,10 +91,68 @@ namespace PSD2UGUI.Manager
             foreach (var item in layers)
             {
                 var nodeGo = Extensions.NewGo(GetUniqueName(item), parent);
-                var trans = nodeGo.GetComponent<RectTransform>();
-                trans.pivot = Pivot;
-                trans.anchoredPosition = item["pos"].ReadVector2();
-                trans.sizeDelta = item["size"].ReadVector2();
+                var rect = nodeGo.GetComponent<RectTransform>();
+                rect.pivot = Pivot;
+
+                var nodeType = item["nodeTypeName"].Value.ToComponentType();
+                rect.anchoredPosition3D = item["pos"].ReadVector2();
+                rect.sizeDelta = item["size"].ReadVector2();
+
+                var info = NodeManager.Instance.GetInstantiaInfo(nodeType, item);
+                if (info.AnchorType != 0)
+                {
+                    var minAnchor = Vector2.zero;
+                    var maxAnchor = Vector2.zero;
+                    var pivot = Vector2.zero;
+                    switch (info.AnchorType)
+                    {
+                        case AnchorType.LEFTTOP:
+                            pivot = minAnchor = maxAnchor = new Vector2(0F, 1F);
+                            break;
+                        case AnchorType.LEFT:
+                            pivot = minAnchor = maxAnchor = new Vector2(0F, 0.5F);
+                            break;
+                        case AnchorType.LEFTBOTTOM:
+                            pivot = minAnchor = maxAnchor = new Vector2(0F, 0F);
+                            break;
+                        case AnchorType.TOP:
+                            pivot = minAnchor = maxAnchor = new Vector2(0.5F, 1F);
+                            break;
+                        case AnchorType.CENTER:
+                            pivot = minAnchor = maxAnchor = new Vector2(0.5F, 0.5F);
+                            break;
+                        case AnchorType.BOTTOM:
+                            pivot = minAnchor = maxAnchor = new Vector2(0.5F, 0F);
+                            break;
+                        case AnchorType.RIGHTTOP:
+                            pivot = minAnchor = maxAnchor = new Vector2(1F, 1F);
+                            break;
+                        case AnchorType.RIGHT:
+                            pivot = minAnchor = maxAnchor = new Vector2(1F, 0.5F);
+                            break;
+                        case AnchorType.RIGHTBOTTOM:
+                            pivot = minAnchor = maxAnchor = new Vector2(1F, 0F);
+                            break;
+                        case AnchorType.STRETCH:
+                            minAnchor = Vector2.zero;
+                            maxAnchor = Vector2.one;
+                            pivot = Vector2.one * 0.5F;
+                            break;
+                        default:
+                            throw new NotImplementedException(string.Format("AnchorType:{0} 未实现.", info.AnchorType));
+                    }
+
+                    Extensions.SetAnchor(rect, minAnchor, false);
+                    Extensions.SetAnchor(rect, maxAnchor, true);
+                    Extensions.SetPivot(rect, pivot);
+                }
+
+                //将Window的位置信息归零居中
+                if (nodeType == ComponentType.WINDOW)
+                {
+                    rect.anchoredPosition3D = Vector2.zero;
+                    rect.sizeDelta = Vector2.zero;
+                }
 
                 switch (item["layerTypeName"].Value)
                 {
@@ -124,7 +180,7 @@ namespace PSD2UGUI.Manager
             index++;
             foreach (var item in layers)
             {
-                var child = ViewParent.Find(GetUniqueName(item));
+                var child = GUISystemRoot.Find(GetUniqueName(item));
                 child.SetParent(parent);
                 child.name = item["name"].Value;
 
@@ -155,56 +211,6 @@ namespace PSD2UGUI.Manager
                 var generate = NodeManager.Instance.GetGenerateNode(nodeType);
                 var info = NodeManager.Instance.GetInstantiaInfo(nodeType, item.JSONNode);
                 var rect = (RectTransform)item.Transform;
-
-                if (info.NodeType == ComponentType.Window)
-                {
-                    rect.anchorMin = Vector2.zero;
-                    rect.anchorMax = Vector2.one;
-                    rect.pivot = Vector2.one * 0.5F;
-                    rect.anchoredPosition3D = Vector3.zero;
-                    rect.sizeDelta = Vector2.zero;
-                }
-
-                if (info.AnchorType != 0)
-                {
-                    var anchor = Vector2.zero;
-                    switch (info.AnchorType)
-                    {
-                        case AnchorType.TopLeft:
-                            anchor = new Vector2(0F, 1F);
-                            break;
-                        case AnchorType.Left:
-                            anchor = new Vector2(0F, 0.5F);
-                            break;
-                        case AnchorType.BottomLeft:
-                            anchor = new Vector2(0F, 0F);
-                            break;
-                        case AnchorType.Top:
-                            anchor = new Vector2(0.5F, 1F);
-                            break;
-                        case AnchorType.Center:
-                            anchor = new Vector2(0.5F, 0.5F);
-                            break;
-                        case AnchorType.Bottom:
-                            anchor = new Vector2(0.5F, 0F);
-                            break;
-                        case AnchorType.TopRight:
-                            anchor = new Vector2(1F, 1F);
-                            break;
-                        case AnchorType.Right:
-                            anchor = new Vector2(1F, 0.5F);
-                            break;
-                        case AnchorType.BottomRight:
-                            anchor = new Vector2(1F, 0F);
-                            break;
-                        default:
-                            throw new NotImplementedException(string.Format("AnchorType:{0} 未实现.", info.AnchorType));
-                    }
-
-                    Extensions.SetAnchor(rect, anchor, false);
-                    Extensions.SetAnchor(rect, anchor, true);
-                    Extensions.SetPivot(rect, anchor);
-                }
 
                 generate.UpdateNode(info, item.Transform.gameObject);
             }
