@@ -1,5 +1,5 @@
 # 配合 [psd2ugui.extension](https://github.com/tylearymf/psd2ugui.extension) 使用效率更高
-
+# 后期转到TypeScript版本的实现. https://github.com/tylearymf/psd2ugui.ts
 
 
 # PSD2UGUI工具使用说明
